@@ -1,0 +1,41 @@
+{
+    "name": "sfinktah/neto",
+    "description": "Simple Neto (Maropost) API Connector",
+    "keywords": ["neto", "maropost", "laravel"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Christopher Anderson",
+            "email": "sfinktah@github.spamtrak.org"
+        }
+    ],
+    "require": {
+        "php": "^7.2.5|^8.0",
+        "guzzlehttp/guzzle": "^7"
+    },
+    "require-dev": {
+    },
+    "suggest": {
+    },
+    "autoload": {
+        "psr-4": {
+            "Sfinktah\\Neto\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sfinktah\\Neto\\NetoServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
