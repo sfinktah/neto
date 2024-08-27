@@ -5,7 +5,7 @@ namespace Sfinktah\Neto;
 class NetoGetOrder extends NetoPost
 {
     public static string $netoAction = 'GetOrder';
-    public static array $outputSelectors = [
+    public static array $availableOutputSelectors = [
         "ShippingOption", "DeliveryInstruction", "Username", "Email", "ShipAddress", "BillAddress", "CustomerRef1",
         "CustomerRef2", "CustomerRef3", "CustomerRef4", "SalesChannel", "GrandTotal", "ShippingTotal",
         "ShippingDiscount", "OrderType", "OrderStatus", "OrderPayment", "OrderPayment.DatePaid", "DatePlaced",
