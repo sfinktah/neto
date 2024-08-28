@@ -2,7 +2,31 @@
 
 namespace Sfinktah\Neto;
 
+use Exception;
 use GuzzleHttp\Client;
+
+function config($key = null, $default = null)
+{
+    static $config = null;
+
+    if ($config === null) {
+        $config_path = dirname(__DIR__) . '/config/neto.php';
+        // printf("config_path: %s\n", $config_path);
+        try {
+            if (!file_exists($config_path)) {
+                printf("Config file does not exist: %s\n", $config_path);
+            }
+            $config = include($config_path);
+            // printf("\$config: %s\n", print_r($config, 1));
+        } catch (Exception $exception) {
+            // printf("EXCEPTION WITH DIR %s\n", $config_path);
+        }
+    }
+
+    $rv = $key !== null ? ($config[$key] ?? $default) : $config;
+    // printf("key: '%s' rv: '%s'\n", print_r($key, 1), print_r($rv, 1));
+    return $rv;
+}
 
 class InvalidOutputSelector extends \Exception
 {
@@ -19,47 +43,49 @@ class NetoPost
 {
     public static string $netoAction = '';
     public static array $availableOutputSelectors = [];
-    public static array $availableFilters = [];
+    public static array $availableDataItems = [];
 
     public array $outputSelectors = [];
-    public array $filter = [];
+    public array $data = [];
 
     /**
-     * @param array|null $filter
+     * @param array|null $data
      * @return array
      * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws \Sfinktah\Neto\InvalidOutputSelector
      */
-    public function post(array|null $filter = null): array {
+    public function post(array|null $data = null): array {
         $httpClient = new Client();
 
-        $filter = array_merge_recursive($this->filter ?? [], $filter ?? []);
+        if (is_array($data)) {
+            $data = array_unique(array_merge_recursive($this->data, $data));
+        } else {
+            $data = $this->data;
+        }
 
         // Define request data
         //     -- https://developers.maropost.com/documentation/engineers/api-documentation/products/getitem
         $postData = [
-            "Filter" => [
-                $filter,
-            ]
+            "Data" => $data,
         ];
 
-        if (array_key_exists('OutputSelector', $filter) && is_array($filter['OutputSelector'])) {
-            $filter['OutputSelector'] = array_unique(array_merge($this->outputSelectors, $filter['OutputSelector']));
+        $postData['Data']['OutputSelector'] = array_values(array_unique(array_merge($this->outputSelectors, $data['OutputSelector'] ?? [])));
+
+        if (count(static::$availableOutputSelectors) && array_key_exists('OutputSelector', $data)) {
+            // print_r($data);
+            $this->validateOutputSelectors($data);
         }
 
-        if (count(static::$availableOutputSelectors) && array_key_exists('OutputSelector', $filter)) {
-            print_r($filter);
-            $this->validateOutputSelectors($filter);
-        }
+        // printf("postData: %s\n", print_r(json_encode($postData, JSON_PRETTY_PRINT), true));
 
         $headers = [
             'NETOAPI_ACTION' => static::$netoAction,
             'NETOAPI_USERNAME' => 'api_access',
-            'NETOAPI_KEY' => config('neto.API_KEY'),
+            'NETOAPI_KEY' => config('API_KEY'),
             'Accept' => 'application/json',
         ];
 
-        $response = $httpClient->post(config('neto.API_ENDPOINT'), [
+        $response = $httpClient->post(config('API_ENDPOINT'), [
             'headers' => $headers,
             'json' => $postData,
             'connect_timeout' => 650
@@ -71,10 +97,11 @@ class NetoPost
     /**
      * @throws \Sfinktah\Neto\InvalidOutputSelector
      */
-    public function validateOutputSelectors(array $filter): void {
-        $valid = array_reduce($filter['OutputSelector'], function ($carry, $item) {
+    public function validateOutputSelectors(array $data): void {
+        $valid = array_reduce($data['OutputSelector'], function ($carry, $item) {
             return $carry && in_array($item, static::$availableOutputSelectors);
         }, true);
+        // printf("validateOutputSelectors: %s\n", implode(", ", $data['OutputSelector']));
         if (!$valid) {
             throw new InvalidOutputSelector("Invalid item found in OutputSelector");
         }
@@ -83,24 +110,34 @@ class NetoPost
     /** @param array $outputSelectors = [static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], static::$availableOutputSelectors[$any], ] */
     public function withOutputSelectors(array $outputSelectors): static {
         $this->outputSelectors = array_unique(array_merge($this->outputSelectors, $outputSelectors));
+        // printf("withOutputSelectors: ");
+        // print_r($this->outputSelectors);
         return $this;
     }
 
     /**
-     * @param array|null $filter = static::$availableFilters
+     * @param array $data = static::$availableDataItems
      */
-    public function __construct(array|null $filter = null) {
-        if (is_array($filter)) {
-            $this->filter = array_merge_recursive($this->filter, $filter);
+    public function withData(array $data): static {
+        $this->data = array_unique(array_merge($this->data, $data));
+        // printf("withData: ");
+        // print_r($this->data);
+        return $this;
+    }
+
+    /**
+     * @param array|null $data = static::$availableDataItems
+     */
+    public function __construct(array|null $data = null) {
+        if (is_array($data)) {
+            $this->withData($data);
         }
     }
 
     /**
-     * @param array|null $filter = static::$availableFilters
+     * @param array|null $data = static::$availableDataItems
      */
-    public static function make(array|null $filter = null): static {
-        return new static($filter);
+    public static function make(array|null $data = null): static {
+        return new static($data);
     }
-
-
 }

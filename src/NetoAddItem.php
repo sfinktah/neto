@@ -10,5 +10,5 @@ class NetoAddItem extends NetoUpdateItem
     public static string $netoAction = 'AddItem';
 
     // (these appear to be the same as for UpdateItem)
-    // public static array $availableFilters
+    // public static array $availableDataItems
 }
