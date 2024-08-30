@@ -199,7 +199,8 @@ function testUpdateOrder($sku = 'amp74830-01A', string $orderId = 'SFX0004973'):
     // ********************
     // ** UpdateOrder
     // ********************
-    $request = NetoUpdateOrder::make()
+    $request = new NetoUpdateOrder;
+    $request
         ->withData([
                 "OrderID" => $orderId,
                 "StickyNoteTitle" => "Test Title",
