@@ -16,6 +16,7 @@ class NetoPost
     public array $outputSelectors = [];
     public array $data = [];
     protected array $responseData = [];
+    public string|false|null $postData = null;
 
     /**
      * @param array|null $data
@@ -46,6 +47,7 @@ class NetoPost
         }
 
         // printf("postData: %s\n", print_r(json_encode($postData, JSON_PRETTY_PRINT), true));
+        $this->postData = json_encode($postData, JSON_PRETTY_PRINT);
 
         $headers = [
             'NETOAPI_ACTION' => static::$netoAction,
@@ -88,7 +90,7 @@ class NetoPost
      * @param array $data = static::$availableDataItems
      */
     public function withData(array $data): static {
-        $this->data = array_unique(array_merge($this->data, $data));
+        $this->data = array_merge($this->data, $data);
         return $this;
     }
 

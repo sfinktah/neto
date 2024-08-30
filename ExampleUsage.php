@@ -1,5 +1,6 @@
 <?php /** @noinspection DuplicatedCode */
 
+use Brick\VarExporter\VarExporter;
 use Sfinktah\Neto\NetoAddItem;
 use Sfinktah\Neto\NetoDateTime;
 use Sfinktah\Neto\NetoGetItem;
@@ -7,7 +8,7 @@ use Sfinktah\Neto\NetoGetOrder;
 use Sfinktah\Neto\NetoUpdateOrder;
 
 
-$directory = __DIR__;
+$directory = realpath(__DIR__);
 $bootstrapFilePath = '';
 while ($directory !== DIRECTORY_SEPARATOR) {
     $potentialPath = $directory . DIRECTORY_SEPARATOR . 'bootstrap.php';
@@ -18,10 +19,12 @@ while ($directory !== DIRECTORY_SEPARATOR) {
     $directory = dirname($directory);
 }
 
-if ($bootstrapFilePath) {
-    require_once $bootstrapFilePath;
-} else {
-    echo "Error: Unable to locate 'bootstrap.php' in the current directory or any parent directories. This may be fatal.\n";
+if (!function_exists('dump')) {
+    if ($bootstrapFilePath) {
+        require_once $bootstrapFilePath;
+    } else {
+        echo "Error: Unable to locate 'bootstrap.php' in the current directory or any parent directories. This may be fatal.\n";
+    }
 }
 
 function getOrderDetailsByDateRange($dateFrom, $dateTo)
@@ -58,7 +61,7 @@ function getOrderDetailsByDateRange($dateFrom, $dateTo)
         'SurchargeTotal', // Fetching surcharge total
         'CurrencyCode', // Fetching currency code, use a default if not available
         'InternalOrderNotes', // Fetching internal notes
-        'StickyNotes', // Fetching sticky notes
+         // 'StickyNotes', // Fetching sticky notes
         'DatePlaced',
         'DateRequired',
         'DateInvoiced',
@@ -203,9 +206,10 @@ function testUpdateOrder($sku = 'amp74830-01A', string $orderId = 'SFX0004973'):
     $request
         ->withData([
                 "OrderID" => $orderId,
-                "StickyNoteTitle" => "Test Title",
-                "StickyNote" => "Test Note",
-                "OrderStatus" => "Dispatched",
+                "StickyNoteTitle" => "Test Title 2",
+                "StickyNote" => "Test Note 2",
+                // "OrderStatus" => "Dispatched",
+                "OrderStatus" => "Cancelled",
                 // "SendOrderEmail" => "tracking",
                 // "OrderLine" => [
                 //     [
@@ -227,32 +231,50 @@ function testUpdateOrder($sku = 'amp74830-01A', string $orderId = 'SFX0004973'):
                 // ]
         ]);
     $request->post();
-    var_export($request->responseData());
+
+    $response = $request->responseData();
+
+    // var_export($request->responseData());
+    // dump($request->responseData());
+    // echo VarExporter::export($request->responseData()) . "\n";
+    // s($request->responseData());
+    if ($response['Ack'] == 'Error' && $response['Messages']['Error']['Message'] == 'JSON Error') {
+        // VarExporter::export($request->postData);
+        ssd($request->postData);
+    }
+
+    // var_export($request->responseData());
+    echo VarExporter::export($response) . "\n";
     return $request;
 }
 
 /**
  * @param mixed $orderId
  * @return \Sfinktah\Neto\NetoGetOrder
+ * @throws \GuzzleHttp\Exception\GuzzleException
+ * @throws \Sfinktah\Neto\InvalidOutputSelector|\Brick\VarExporter\ExportException
  */
 function testGetOrder(mixed $orderId = 'SFX0004973'): NetoGetOrder {
     // ********************
     // ** GetOrder by OrderID
     // ********************
     $request = NetoGetOrder::make(['OrderID' => $orderId])
-        ->withOutputSelectors(['OrderStatus', 'StickyNotes', 'Username', 'Email', 'ShipAddress', 'ShippingOption', 'OrderLine', 'OrderLine.ShippingTracking', 'OrderLine.ShippingMethod', 'OrderLine.ShippingTrackingUrl']);
+        ->withOutputSelectors(['OrderStatus', 'Username', 'Email', 'ShipAddress', 'ShippingOption',
+        'OrderLine', 'OrderLine.ShippingTracking', 'OrderLine.ShippingMethod', 'OrderLine.ShippingTrackingUrl',
+        'DatePlaced']); // 'StickyNotes',
     $request->post();
-    var_export($request->responseData());
+    // var_export($request->responseData());
+    echo VarExporter::export($request->responseData()) . "\n";
+
     return $request;
 }
 
-/**
- * @param array|string $orderId
- * @return \Sfinktah\Neto\NetoUpdateOrder
- * @throws \GuzzleHttp\Exception\GuzzleException
- * @throws \Sfinktah\Neto\InvalidOutputSelector
- */
-// change order status to Dispatched
+// change order status to 'Dispatched'
+/** @noinspection PhpUnhandledExceptionInspection */
 $request = testUpdateOrder();
+
 // get updated order
+/** @noinspection PhpUnhandledExceptionInspection */
 $request = testGetOrder();
+
+s(getOrderDetailsByDateRange('2024-08-29 02:36:54', '2024-08-29 02:36:56'));
