@@ -8,6 +8,7 @@ namespace Sfinktah\Neto;
 class NetoUpdateItem extends NetoPost
 {
     public static string $netoAction = 'UpdateItem';
+    public static string $postKey = 'Item';
     public static array $availableDataItems = [
             "Item" => [
                 [
