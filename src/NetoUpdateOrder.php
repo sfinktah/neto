@@ -8,6 +8,7 @@ namespace Sfinktah\Neto;
 class NetoUpdateOrder extends NetoPost
 {
     public static string $netoAction = 'UpdateOrder';
+    public static string $postKey = 'Order';
     public static array $availableOutputSelectors = [];
 
     public static array $availableDataItems = [
