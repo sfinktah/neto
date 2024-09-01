@@ -117,7 +117,7 @@ function addHelloKittyItem(mixed $sku): NetoAddItem {
                 'Name' => 'blah',
                 'RestockQty' => 12,
                 'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 99, 'Action' => 'set'],
-                'SKU' => $sku . "-00000TEST",
+                'SKU' => $sku,
             ]]);
     echo VarExporter::export($request->post()) . "\n";
     return $request;
@@ -148,7 +148,7 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
                 'Name' => 'A really pretty Hello Kitty for your hizzy',
                 'RestockQty' => 8,
                 'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
-                'SKU' => $sku . "-00000TEST",
+                'SKU' => $sku,
             ]]);
     echo VarExporter::export($request->post()) . "\n";
     return $request;
@@ -166,7 +166,7 @@ function getItemBySku(mixed $sku): NetoGetItem {
     // ** GetItem by SKU
     // ********************
     $request = NetoGetItem::make(['SKU' => $sku])
-        ->withOutputSelectors(['Name', 'Brand', 'Model']);
+        ->withOutputSelectors(['Name', 'Brand', 'Model', 'WarehouseQuantity']);
     $request->post();
     $itemData = $request->responseData();
     printf("GetItem Error: %s\n", $itemData['Messages']['Error'] ?? 'None');
@@ -257,14 +257,15 @@ $sku = '0001SHIF-A';
 $orderId = 'SFX0004973';
 $helloKittySku = $sku . "-00000TEST";
 
+/** @noinspection PhpUnhandledExceptionInspection */
+$request = getItemBySku($helloKittySku);
+sd($request->responseData());
 
 /** @noinspection PhpUnhandledExceptionInspection */
-$request = addHelloKittyItem($sku);
+$request = addHelloKittyItem($helloKittySku);
 
 /** @noinspection PhpUnhandledExceptionInspection */
-$request = updateHelloKittyItem($sku);
-
-die();
+$request = updateHelloKittyItem($helloKittySku);
 
 // change order status to 'Dispatched'
 /** @noinspection PhpUnhandledExceptionInspection */
