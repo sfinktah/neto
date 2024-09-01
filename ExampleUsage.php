@@ -144,12 +144,20 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
     // https://developers.maropost.com/documentation/engineers/api-documentation/products/updateitem/
     $request = NetoUpdateItem::make()
         ->withData(
-            [[
+            [
+                [
                 'Name' => 'A really pretty Hello Kitty for your hizzy',
                 'RestockQty' => 8,
                 'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
                 'SKU' => $sku,
-            ]]);
+                ],
+                [
+                    'Name' => 'A really pretty Hello Kitty for your hizzy',
+                    'RestockQty' => 8,
+                    'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
+                    'SKU' => $sku,
+                ],
+                ]);
     echo VarExporter::export($request->post()) . "\n";
     return $request;
 }
@@ -253,20 +261,36 @@ function testGetOrder(mixed $orderId = 'SFX0004973'): NetoGetOrder {
     return $request;
 }
 
+function debugGetOrder(mixed $orderId = 'SFX0004973') {
+    sd(NetoGetOrder::make(['OrderID' => $orderId])
+        ->withOutputSelectors(NetoGetOrder::$availableOutputSelectors)
+        ->post());
+}
+
+function debugGetItem(mixed $sku = '0001SHIF-A') {
+    echo VarExporter::export('') . "\n";
+    $request = NetoGetItem::make(['SKU' => $sku])
+        ->withOutputSelectors(NetoGetItem::$availableOutputSelectors);
+    $res2 = $request->post();
+    $response = $request->responseData();
+}
+
 $sku = '0001SHIF-A';
 $orderId = 'SFX0004973';
 $helloKittySku = $sku . "-00000TEST";
 
+// debugGetItem();
+
 /** @noinspection PhpUnhandledExceptionInspection */
-$request = addHelloKittyItem($helloKittySku);
+// $request = addHelloKittyItem($helloKittySku);
 
 /** @noinspection PhpUnhandledExceptionInspection */
 $request = updateHelloKittyItem($helloKittySku);
-
+die();
 /** @noinspection PhpUnhandledExceptionInspection */
-$request = getItemBySku($helloKittySku);
+// $request = getItemBySku($helloKittySku);
 
-sd($request->responseData());
+// sd($request->responseData());
 
 // change order status to 'Dispatched'
 /** @noinspection PhpUnhandledExceptionInspection */

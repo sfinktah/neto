@@ -117,4 +117,14 @@ class NetoUpdateOrder extends NetoPost
     public function responseData() : array {
         return $this->responseData;
     }
+
+    /**
+     * @param array|null $data Items
+     * @return array = $this->responseData()
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Sfinktah\Neto\InvalidOutputSelector
+     */
+    public function post(array|null $data = null): array {
+        return parent::post($data);
+    }
 }

@@ -19,8 +19,6 @@ class NetoPost
     public string|false|null $postData = null;
 
     /**
-     * @param array|null $data
-     * @return array = static::returnDataExample()
      * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws \Sfinktah\Neto\InvalidOutputSelector
      */
@@ -144,3 +142,23 @@ class NetoPost
         return $key !== null ? ($config[$key] ?? $default) : $config;
     }
 }
+
+
+/*
+var array = $('a:contains(Enumeration)').map(function() {
+    var $this = $(this);
+    var $parent = $this.parent();
+    var $lastPrev = $parent.prevAll().last();
+
+    var match = function(text, pattern) {
+        var matched = text.match(pattern);
+        return matched ? matched[1] : "";
+    };
+
+    return {
+        enumOptions: match($parent.text(), /\((.*?)\)/),
+        enumName: $lastPrev.text(),
+        enumParent: match($lastPrev.parentsUntil('table').parent().prev().text(), /<(.*?)>/)
+    };
+}).get();
+ */
