@@ -157,7 +157,7 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
                     'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
                     'SKU' => $sku,
                 ],
-                ]);
+            ]);
     echo VarExporter::export($request->post()) . "\n";
     return $request;
 }

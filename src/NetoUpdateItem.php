@@ -5,10 +5,9 @@ namespace Sfinktah\Neto;
 /**
  * https://developers.maropost.com/documentation/engineers/api-documentation/products/updateitem/
  */
-class NetoUpdateItem extends NetoPost
+class NetoUpdateItem extends NetoItem
 {
     public static string $netoAction = 'UpdateItem';
-    public static string $postKey = 'Item';
     public static array $availableDataItems = [
                 [
                     "SKU" => "String",
@@ -329,7 +328,14 @@ class NetoUpdateItem extends NetoPost
     /**
      * @return array = [
      *     'Item' => [
-     *         'SKU' => '0001SHIF-A-00000TEST'
+     *         'SKU' => '0001SHIF-A-00000TEST',
+     *          // will be an array of results if multiple updates occur:
+     *          [
+     *              'SKU' => '0001SHIF-A-00000TEST'
+     *          ],
+     *          [
+     *              'SKU' => '0001SHIF-A-00000TEST'
+     *          ]
      *     ],
      *     'CurrentTime' => '2024-08-30 10:22:21',
      *     'Ack' => ['Success', 'Error'][$any]

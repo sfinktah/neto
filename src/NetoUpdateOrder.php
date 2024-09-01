@@ -5,7 +5,7 @@ namespace Sfinktah\Neto;
 /**
  * https://developers.maropost.com/documentation/engineers/api-documentation/orders-invoices/updateorder
  */
-class NetoUpdateOrder extends NetoPost
+class NetoUpdateOrder extends NetoOrder // Post
 {
     public static string $netoAction = 'UpdateOrder';
     public static string $postKey = 'Order';
