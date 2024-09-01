@@ -158,7 +158,7 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
                     'SKU' => $sku,
                 ],
             ]);
-    echo VarExporter::export($request->post()) . "\n";
+    echo VarExporter::export(collect($request->post())->flatten()->toArray()) . "\n";
     return $request;
 }
 
