@@ -146,10 +146,10 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
         ->withData(
             [
                 [
-                'Name' => 'A really pretty Hello Kitty for your hizzy',
-                'RestockQty' => 8,
-                'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
-                'SKU' => $sku,
+                    'Name' => 'A really pretty Hello Kitty for your hizzy',
+                    'RestockQty' => 8,
+                    'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
+                    'SKU' => $sku,
                 ],
                 [
                     'Name' => 'A really pretty Hello Kitty for your hizzy',
@@ -158,8 +158,53 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
                     'SKU' => $sku,
                 ],
             ]);
-    echo VarExporter::export($request->post()) . "\n";
-    // echo VarExporter::export(collect($request->post())->flatten()->toArray()) . "\n";
+    $responseData = $request->post();
+
+    // ** THIS IS WHAT WE GET FROM NETO
+    // Single update:
+    // [
+    //     'Item' => [
+    //         '0001SHIF-A-00000TEST'
+    //     ],
+    //     'CurrentTime' => '2024-09-01 13:45:20',
+    //     'Ack' => 'Success'
+    // ]
+
+    // ** THIS IS WHAT WE GET FROM NETO
+    // Multiple updates:
+    // [
+    //     'Item' => [
+    //         [
+    //             'SKU' => '0001SHIF-A-00000TEST'
+    //         ],
+    //         [
+    //             'SKU' => '0001SHIF-A-00000TEST'
+    //         ]
+    //     ],
+    //     'CurrentTime' => '2024-09-01 13:43:58',
+    //     'Ack' => 'Success'
+    // ]
+
+    // To normalise this somewhat, we could produce an output such as follows, using an array of SKUs even when
+    // only 1 SKU is present. Though if no SKUs are present, the result would be undefined:
+    // [
+    //     'Item' => [
+    //         'SKU' => [
+    //             '0001SHIF-A-00000TEST',
+    //             '0001SHIF-A-00000TEST'
+    //         ]
+    //     ],
+    //     'CurrentTime' => '2024-09-01 13:51:42',
+    //     'Ack' => 'Success'
+    // ]
+    //
+    // We may elect not to modify the response, and have an additional method ::updatedSkus() or smth, but let's
+    // just manually perform it here for this example until we decide.
+    if (is_array($responseData['Item']) && count($responseData['Item'])) {
+        $responseData['Item'] = ['SKU' => collect($responseData['Item'])->flatten()->toArray()];
+    }
+
+    echo VarExporter::export($responseData) . "\n";
     return $request;
 }
 
