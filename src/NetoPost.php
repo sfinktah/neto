@@ -39,11 +39,12 @@ class NetoPost
             static::$postKey => $data,
         ];
 
-        $postData[static::$postKey]['OutputSelector'] = array_values(array_unique(array_merge($this->outputSelectors, $data['OutputSelector'] ?? [])));
-
-        if (count(static::$availableOutputSelectors) && array_key_exists('OutputSelector', $data)) {
-            // print_r($data);
-            $this->validateOutputSelectors($data);
+        if (!empty($this->outputSelectors) || !empty($data['OutputSelector'] ?? [])) {
+            $postData[static::$postKey]['OutputSelector'] = array_values(array_unique(array_merge($this->outputSelectors, $data['OutputSelector'] ?? [])));
+            if (count(static::$availableOutputSelectors) && array_key_exists('OutputSelector', $data)) {
+                // print_r($data);
+                $this->validateOutputSelectors($data);
+            }
         }
 
         // printf("postData: %s\n", print_r(json_encode($postData, JSON_PRETTY_PRINT), true));

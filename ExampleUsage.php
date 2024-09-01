@@ -5,6 +5,7 @@ use Sfinktah\Neto\NetoAddItem;
 use Sfinktah\Neto\NetoDateTime;
 use Sfinktah\Neto\NetoGetItem;
 use Sfinktah\Neto\NetoGetOrder;
+use Sfinktah\Neto\NetoUpdateItem;
 use Sfinktah\Neto\NetoUpdateOrder;
 
 
@@ -97,41 +98,70 @@ function getOrderDetailsByDateRange($dateFrom, $dateTo)
 }
 function test($sku = '0001SHIF-A', $orderId = 'SFX0004973') {
 
+}
+
+/**
+ * @param mixed $sku
+ * @return \Sfinktah\Neto\NetoAddItem
+ * @throws \Brick\VarExporter\ExportException
+ * @throws \GuzzleHttp\Exception\GuzzleException
+ * @throws \Sfinktah\Neto\InvalidOutputSelector
+ */
+function addHelloKittyItem(mixed $sku): NetoAddItem {
     // ********************
-    // ** GetOrder by DateRange
+    // ** AddItem
     // ********************
-    $request = NetoGetOrder::make([
-        'DatePlacedFrom' => NetoDateTime::make('-1 week'),
-        'DatePlacedTo' => NetoDateTime::make('now'),
-    ])
-        ->withOutputSelectors(['OrderStatus', 'Username', 'Email', 'ShipAddress', 'ShippingOption', 'DateCompleted']);
+    $request = NetoAddItem::make()
+        ->withData(
+            [[
+                'Name' => 'blah',
+                'RestockQty' => 12,
+                'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 99, 'Action' => 'set'],
+                'SKU' => $sku . "-00000TEST",
+            ]]);
+    echo VarExporter::export($request->post()) . "\n";
+    return $request;
 
-    $request->post();
-    $orderData = $request->responseData();
-    foreach ($orderData as $key => $orders) {
-        if (is_array($orders)) {
-            foreach ($orders as $order) {
-                $isCancelled = $order['OrderStatus'] === 'Cancelled';
-                print_r(["Order" => [
-                    'isCancelled' => $isCancelled ? 'Cancelled' : 'Not Cancelled',
-                    $order['OrderStatus'],
-                    $order['Username'],
-                    $order['Email'],
-                    $order['ShipCountry'],
-                    $order['ShippingOption'],
+    // ********************
+    // ** UpdateItem
+    // ********************
+    // This is going to be the same as AddItem (as far as I can tell)
+    // https://developers.maropost.com/documentation/engineers/api-documentation/products/updateitem/
+}
 
-                    //...
-                    // ...
-                    // use autocomplete in klesun/deep-assoc-completion PhpStorm plugin for a complete list
-                ]]);
-            }
-        }
-        else {
-            printf("%s: %s\n", $key, print_r($orders, 1));
-        }
-    }
+/**
+ * @param mixed $sku
+ * @return \Sfinktah\Neto\NetoAddItem
+ * @throws \Brick\VarExporter\ExportException
+ * @throws \GuzzleHttp\Exception\GuzzleException
+ * @throws \Sfinktah\Neto\InvalidOutputSelector
+ */
+function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
+    // ********************
+    // ** UpdateItem
+    // ********************
+    // This is going to be the same as AddItem (as far as I can tell)
+    // https://developers.maropost.com/documentation/engineers/api-documentation/products/updateitem/
+    $request = NetoUpdateItem::make()
+        ->withData(
+            [[
+                'Name' => 'A really pretty Hello Kitty for your hizzy',
+                'RestockQty' => 8,
+                'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
+                'SKU' => $sku . "-00000TEST",
+            ]]);
+    echo VarExporter::export($request->post()) . "\n";
+    return $request;
+}
 
 
+/**
+ * @param mixed $sku
+ * @return \Sfinktah\Neto\NetoGetItem
+ * @throws \GuzzleHttp\Exception\GuzzleException
+ * @throws \Sfinktah\Neto\InvalidOutputSelector
+ */
+function getItemBySku(mixed $sku): NetoGetItem {
     // ********************
     // ** GetItem by SKU
     // ********************
@@ -148,54 +178,7 @@ function test($sku = '0001SHIF-A', $orderId = 'SFX0004973') {
             $item['Model']
         ]]);
     }
-
-    // ********************
-    // ** AddItem
-    // ********************
-    $request = NetoAddItem::make([
-        'Item' => [
-            [
-                'Name' => 'blah',
-                'RestockQty' => 12,
-                'SKU' => $sku,
-                'Images' => [
-                    'Image' => [
-                        ['Name' => 'Hello Kitty', 'URL' => 'https://www.hellokitty.com'],
-                    ]
-                ],
-            ]
-        ]]);
-    $request->post();
-    // Documentation suggests this will return
-    //    {
-    //        "Item": [
-    //            {
-    //                "SKU": "String"
-    //            }
-    //        ],
-    //        "Messages": {
-    //            "Error": [
-    //                {
-    //                    "Message": "String",
-    //                    "SeverityCode": "String",
-    //                    "Description": "String"
-    //                }
-    //            ],
-    //            "Warning": [
-    //                {
-    //                    "Message": "String",
-    //                    "SeverityCode": "String"
-    //                }
-    //            ]
-    //        }
-    //    }
-    var_export($request->responseData());
-
-    // ********************
-    // ** UpdateItem
-    // ********************
-    // This is going to be the same as AddItem (as far as I can tell)
-    // https://developers.maropost.com/documentation/engineers/api-documentation/products/updateitem/
+    return $request;
 }
 
 function testUpdateOrder($sku = 'amp74830-01A', string $orderId = 'SFX0004973'): NetoUpdateOrder {
@@ -211,15 +194,16 @@ function testUpdateOrder($sku = 'amp74830-01A', string $orderId = 'SFX0004973'):
                 // "OrderStatus" => "Dispatched",
                 "OrderStatus" => "Cancelled",
                 // "SendOrderEmail" => "tracking",
-                // "OrderLine" => [
-                //     [
-                //         "SKU" => $sku,
-                //         "TrackingDetails" => [
-                //             "ShippingMethod" => "Australia Post eParcel",
-                //             "TrackingNumber" => "C123345767765",
-                //             "DateShipped" => "2014-01-03 02:40:10"
-                //         ]
-                //     ],
+                "OrderLine" => [
+                    [
+                        "SKU" => $sku,
+                        "TrackingDetails" => [
+                            "ShippingMethod" => "Australia Post eParcel",
+                            "TrackingNumber" => "C123345767765",
+                            "DateShipped" => "2014-01-03 02:40:10",
+                        ]
+                    ],
+                ]
                 //     [
                 //         "SKU" => $sku,
                 //         "TrackingDetails" => [
@@ -269,6 +253,19 @@ function testGetOrder(mixed $orderId = 'SFX0004973'): NetoGetOrder {
     return $request;
 }
 
+$sku = '0001SHIF-A';
+$orderId = 'SFX0004973';
+$helloKittySku = $sku . "-00000TEST";
+
+
+/** @noinspection PhpUnhandledExceptionInspection */
+$request = addHelloKittyItem($sku);
+
+/** @noinspection PhpUnhandledExceptionInspection */
+$request = updateHelloKittyItem($sku);
+
+die();
+
 // change order status to 'Dispatched'
 /** @noinspection PhpUnhandledExceptionInspection */
 $request = testUpdateOrder();
@@ -277,4 +274,14 @@ $request = testUpdateOrder();
 /** @noinspection PhpUnhandledExceptionInspection */
 $request = testGetOrder();
 
+/** @noinspection PhpUnhandledExceptionInspection */
+$request = getItemBySku($sku);
 s(getOrderDetailsByDateRange('2024-08-29 02:36:54', '2024-08-29 02:36:56'));
+s(
+    collect(getOrderDetailsByDateRange('2024-08-29', '2024-08-30')['Order'])
+        ->filter(
+            /**
+             * @param $order = getOrderDetailsByDateRange()['Order'][]
+             */
+            fn($order) => $order['OrderStatus'] === 'Cancelled')
+);

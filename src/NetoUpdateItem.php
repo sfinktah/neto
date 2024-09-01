@@ -10,7 +10,6 @@ class NetoUpdateItem extends NetoPost
     public static string $netoAction = 'UpdateItem';
     public static string $postKey = 'Item';
     public static array $availableDataItems = [
-            "Item" => [
                 [
                     "SKU" => "String",
                     "RestockQty" => "Integer",
@@ -314,38 +313,35 @@ class NetoUpdateItem extends NetoPost
                         ]
                     ]
                 ]
-            ]
         ];
 
 
     /**
-     * @param array|null $filter Items
-     * @return array = [
-     *     "Item" => [
-     *         [
-     *             "SKU" => "String"
-     *         ]
-     *     ],
-     *     "Messages" => [
-     *         "Error" => [
-     *             [
-     *                 "Message" => "String",
-     *                 "SeverityCode" => "String",
-     *                 "Description" => "String"
-     *             ]
-     *         ],
-     *         "Warning" => [
-     *             [
-     *                 "Message" => "String",
-     *                 "SeverityCode" => "String"
-     *             ]
-     *         ]
-     *     ]
-     * ]
+     * @param array|null $data Items
+     * @return array = $this->responseData()
      * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws \Sfinktah\Neto\InvalidOutputSelector
      */
-    public function post(array|null $filter = null): array {
-        return parent::post($filter);
+    public function post(array|null $data = null): array {
+        return parent::post($data);
+    }
+
+    /**
+     * @return array = [
+     *     'Item' => [
+     *         'SKU' => '0001SHIF-A-00000TEST'
+     *     ],
+     *     'CurrentTime' => '2024-08-30 10:22:21',
+     *     'Ack' => ['Success', 'Error'][$any]
+     *     'Messages' => [
+     *         'Error' => [
+     *             'Message' => 'JSON Error',
+     *             'SeverityCode' => 'Error',
+     *             'Description' => 'String'
+     *     ]
+     * ]
+     */
+    public function responseData() : array {
+        return $this->responseData;
     }
 }
