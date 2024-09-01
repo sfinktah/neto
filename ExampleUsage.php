@@ -258,14 +258,15 @@ $orderId = 'SFX0004973';
 $helloKittySku = $sku . "-00000TEST";
 
 /** @noinspection PhpUnhandledExceptionInspection */
-$request = getItemBySku($helloKittySku);
-sd($request->responseData());
-
-/** @noinspection PhpUnhandledExceptionInspection */
 $request = addHelloKittyItem($helloKittySku);
 
 /** @noinspection PhpUnhandledExceptionInspection */
 $request = updateHelloKittyItem($helloKittySku);
+
+/** @noinspection PhpUnhandledExceptionInspection */
+$request = getItemBySku($helloKittySku);
+
+sd($request->responseData());
 
 // change order status to 'Dispatched'
 /** @noinspection PhpUnhandledExceptionInspection */
