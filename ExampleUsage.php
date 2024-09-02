@@ -1,6 +1,7 @@
 <?php /** @noinspection DuplicatedCode */
 
 use Brick\VarExporter\VarExporter;
+use Illuminate\Support\Str;
 use Sfinktah\Neto\NetoAddItem;
 use Sfinktah\Neto\NetoDateTime;
 use Sfinktah\Neto\NetoGetItem;
@@ -131,7 +132,7 @@ function addHelloKittyItem(mixed $sku): NetoAddItem {
 
 /**
  * @param mixed $sku
- * @return \Sfinktah\Neto\NetoAddItem
+ * @return \Sfinktah\Neto\NetoUpdateItem
  * @throws \Brick\VarExporter\ExportException
  * @throws \GuzzleHttp\Exception\GuzzleException
  * @throws \Sfinktah\Neto\InvalidOutputSelector
@@ -158,7 +159,9 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
                     'SKU' => $sku,
                 ],
             ]);
-    $responseData = $request->post();
+    $request->post();
+    $responseData = $request->responseData();
+
 
     // ** THIS IS WHAT WE GET FROM NETO
     // Single update:
@@ -185,6 +188,7 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
     //     'Ack' => 'Success'
     // ]
 
+
     // To normalise this somewhat, we could produce an output such as follows, using an array of SKUs even when
     // only 1 SKU is present. Though if no SKUs are present, the result would be undefined:
     // [
@@ -203,6 +207,57 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
     if (is_array($responseData['Item']) && count($responseData['Item'])) {
         $responseData['Item'] = ['SKU' => collect($responseData['Item'])->flatten()->toArray()];
     }
+
+    // ** THIS IS WHAT WE GET FROM NETO
+    // Multiple errors:
+    //     'Ack' => 'Warning',
+    //     'Messages' => [
+    //         'Warning' => [
+    //             [
+    //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TESTx',
+    //                 'SeverityCode' => 'Warning'
+    //             ],
+    //             [
+    //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TESTx',
+    //                 'SeverityCode' => 'Warning'
+    //             ]
+    //         ]
+    //     ]
+
+    // ** THIS IS WHAT WE GET FROM NETO
+    // Single error:
+    // [
+    //     'CurrentTime' => '2024-09-02 07:30:10',
+    //     'Ack' => 'Warning',
+    //     'Messages' => [
+    //         'Warning' => [
+    //             'Message' => 'Cannot find Item 0001SHIF-A-00000TESTx',
+    //             'SeverityCode' => 'Warning'
+    //         ]
+    //     ]
+    // ]
+
+    // We can flatten and extract the Item to produce a keyed array in all cases (except when there are no Warnings)
+    if (is_array($responseData['Messages']['Warning'] ?? null) && count($responseData['Messages']['Warning'])) {
+        $responseData['Messages']['Warning'] = collect($responseData['Messages']['Warning'])
+            ->flatten()
+            ->filter(fn($v, $k) => $v !== 'Warning')
+            ->values()
+            ->mapWithKeys(fn($v, $k) => [Str::afterLast($v, 'Item ') => Str::beforeLast($v, ' Item ')])
+            ->toArray();
+    }
+
+    $exampleResult = [
+        'Item' => '',
+        'CurrentTime' => '2024-09-02 08:17:20',
+        'Ack' => 'Warning',
+        'Messages' => [
+            'Warning' => [
+                '0001SHIF-A-00000TESTxx' => 'Cannot find',
+                '0001SHIF-A-00000TESTx' => 'Cannot find'
+            ]
+        ]
+    ];
 
     echo VarExporter::export($responseData) . "\n";
     return $request;

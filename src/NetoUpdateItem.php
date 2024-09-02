@@ -327,25 +327,42 @@ class NetoUpdateItem extends NetoItem
 
     /**
      * @return array = [
-     *     'Item' => [
-     *         'SKU' => '0001SHIF-A-00000TEST',
-     *          // will be an array of results if multiple updates occur:
-     *          [
-     *              'SKU' => '0001SHIF-A-00000TEST'
-     *          ],
-     *          [
-     *              'SKU' => '0001SHIF-A-00000TEST'
-     *          ]
-     *     ],
-     *     'CurrentTime' => '2024-08-30 10:22:21',
-     *     'Ack' => ['Success', 'Error'][$any]
-     *     'Messages' => [
-     *         'Error' => [
-     *             'Message' => 'JSON Error',
-     *             'SeverityCode' => 'Error',
-     *             'Description' => 'String'
-     *     ]
-     * ]
+     *       'Item' => [
+     *           'SKU' => '0001SHIF-A-00000TEST',
+     *           // will be an array of results if multiple updates occur:
+     *           [
+     *               'SKU' => '0001SHIF-A-00000TEST'
+     *           ],
+     *           [
+     *               'SKU' => '0001SHIF-A-00000TEST'
+     *           ]
+     *       ],
+     *       'CurrentTime' => '2024-08-30 10:22:21',
+     *       'Ack' => ['Success', 'Warning', 'Error'],
+     *       'Messages' => [
+     *           'Error' => [
+     *               'Message' => 'JSON Error',
+     *               'SeverityCode' => 'Error',
+     *               'Description' => 'String'
+     *           ],
+     *           'Warning' => [
+     *               'Message' => 'Cannot find Item 0001SHIF-A-00000TEST',
+     *               'SeverityCode' => 'Warning',
+     *               'Description' => 'Optional'
+     *               // will be an array of results if multiple warnings occur:
+     *               [
+     *                    'Message' => 'Cannot find Item 0001SHIF-A-00000TEST',
+     *                    'SeverityCode' => 'Warning',
+     *                    'Description' => 'Optional'
+     *                ],
+     *                [
+     *                    'Message' => 'Cannot find Item 0001SHIF-A-00000TEST',
+     *                    'SeverityCode' => 'Warning',
+     *                    'Description' => 'Optional'
+     *                ]
+     *           ]
+     *       ]
+     *   ]
      */
     public function responseData() : array {
         return $this->responseData;
