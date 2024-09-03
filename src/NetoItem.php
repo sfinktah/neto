@@ -35,7 +35,7 @@ class NetoItem extends NetoPost
 
     public function skusFailed() : array {
         if (!$this->warningsNormalised) {
-            NetoPost::normaliseWarnings($this);
+            $this->normaliseWarnings();
         }
         return data_get($this->responseData(), 'Messages.Warning.*.SKU') ?? [];
     }

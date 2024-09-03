@@ -165,16 +165,7 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
 
 
     $request->normaliseItems();
-
-    // if (is_array($responseData['Messages']['Warning'] ?? null) && count($responseData['Messages']['Warning'])) {
-    //     $responseData['Messages']['Warning'] = collect($responseData['Messages']['Warning'])
-    //         ->flatten()
-    //         ->filter(fn($v, $k) => $v !== 'Warning')
-    //         ->values()
-    //         ->map(fn($v, $k) => ['SKU' => Str::afterLast($v, 'Item '), 'Message' => $v])
-    //         ->toArray();
-    // }
-    NetoPost::normaliseWarnings($request);
+    $request->normaliseWarnings();
 
     /** @noinspection PhpUnusedLocalVariableInspection */
     $exampleResult = [
@@ -199,12 +190,6 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
             ]
         ]
     ];
-
-
-
-    // Bulk processing of succeeded and failed SKUs:
-    // $goodSkus = data_get($responseData, 'Item.SKU') ?? [];
-    // $badSkus = data_get($responseData, 'Messages.Warning.*.SKU') ?? [];
 
     $goodSkus = $request->skusProcessed();
     $badSkus = $request->skusFailed();

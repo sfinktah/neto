@@ -55,7 +55,7 @@ class NetoPost
     // ]
 
     // We can mess with this a little and hopefully not lose any important data:
-    public static function normaliseWarnings(NetoItem $instance): static {
+    public function normaliseWarnings(): static {
         // Result after calling:
         // [   ...,
         //     'Ack' => 'Warning',
@@ -72,11 +72,11 @@ class NetoPost
         //         ]
         //     ]
         // ];
-        if (!$instance->warningsNormalised) {
-            if (is_array($instance->responseData()['Messages']['Warning'] ?? null) && count($instance->responseData()['Messages']['Warning'])) {
+        if (!$this->warningsNormalised) {
+            if (is_array($this->responseData()['Messages']['Warning'] ?? null) && count($this->responseData()['Messages']['Warning'])) {
                 // NOTE: this will only operate correctly for warnings that contain " Item <SKU>$", but it is unknown
                 // what other warning messages may be encountered.
-                $instance->responseData['Messages']['Warning'] = collect($instance->responseData()['Messages']['Warning'])
+                $this->responseData['Messages']['Warning'] = collect($this->responseData()['Messages']['Warning'])
                     ->flatten()
                     ->filter(fn($v, $k) => $v !== 'Warning')
                     ->values()
@@ -88,9 +88,9 @@ class NetoPost
                     })
                     ->toArray();
             }
-            $instance->warningsNormalised = true;
+            $this->warningsNormalised = true;
         }
-        return $instance;
+        return $this;
     }
 
     /**
