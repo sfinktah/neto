@@ -416,18 +416,7 @@ class NetoGetItem extends NetoPost
      *        ],
      *  ]
      */
-    public function responseData() : array {
+    public function responseData(): array {
         return $this->responseData;
-    }
-
-    /**
-     * @param array|null $filter Items
-     * @return array = $this->responseData()
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Sfinktah\Neto\InvalidOutputSelector
-     * @noinspection PhpParameterNameChangedDuringInheritanceInspection
-     */
-    public function post(array|null $filter = null): array {
-        return parent::post($filter);
     }
 }

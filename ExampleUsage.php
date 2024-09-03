@@ -1,4 +1,6 @@
-<?php /** @noinspection DuplicatedCode */
+<?php /** @noinspection PhpUnhandledExceptionInspection */
+
+/** @noinspection DuplicatedCode */
 
 use Brick\VarExporter\VarExporter;
 use Illuminate\Support\Str;
@@ -9,6 +11,8 @@ use Sfinktah\Neto\NetoGetOrder;
 use Sfinktah\Neto\NetoUpdateItem;
 use Sfinktah\Neto\NetoUpdateOrder;
 
+Sage::$displayCalledFrom = false;
+Sage::$theme = Sage::THEME_SOLARIZED_DARK;
 
 $directory = realpath(__DIR__);
 $bootstrapFilePath = '';
@@ -94,8 +98,7 @@ function getOrderDetailsByDateRange($dateFrom, $dateTo)
         'OrderLine.DateShipped', // Fetching the date shipped
     ]);
 
-    $request->post();
-    return $request->responseData();
+    return $request->post()->responseData();
 }
 function test($sku = '0001SHIF-A', $orderId = 'SFX0004973') {
 
@@ -113,14 +116,14 @@ function addHelloKittyItem(mixed $sku): NetoAddItem {
     // ** AddItem
     // ********************
     $request = NetoAddItem::make()
-        ->withData(
+        ->withItem(
             [[
                 'Name' => 'blah',
                 'RestockQty' => 12,
                 'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 99, 'Action' => 'set'],
                 'SKU' => $sku,
             ]]);
-    echo VarExporter::export($request->post()) . "\n";
+    echo VarExporter::export($request->post()->responseData()) . "\n";
     return $request;
 
     // ********************
@@ -133,7 +136,6 @@ function addHelloKittyItem(mixed $sku): NetoAddItem {
 /**
  * @param mixed $sku
  * @return \Sfinktah\Neto\NetoUpdateItem
- * @throws \Brick\VarExporter\ExportException
  * @throws \GuzzleHttp\Exception\GuzzleException
  * @throws \Sfinktah\Neto\InvalidOutputSelector
  */
@@ -144,7 +146,7 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
     // This is going to be the same as AddItem (as far as I can tell)
     // https://developers.maropost.com/documentation/engineers/api-documentation/products/updateitem/
     $request = NetoUpdateItem::make()
-        ->withData(
+        ->withItem(
             [
                 [
                     'Name' => 'A really pretty Hello Kitty for your hizzy',
@@ -156,9 +158,10 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
                     'Name' => 'A really pretty Hello Kitty for your hizzy',
                     'RestockQty' => 8,
                     'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
-                    'SKU' => $sku,
+                    'SKU' => 'TEST_INVALID_SKU',
                 ],
             ]);
+
     $request->post();
     $responseData = $request->responseData();
 
@@ -204,9 +207,10 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
     //
     // We may elect not to modify the response, and have an additional method ::updatedSkus() or smth, but let's
     // just manually perform it here for this example until we decide.
-    if (is_array($responseData['Item']) && count($responseData['Item'])) {
-        $responseData['Item'] = ['SKU' => collect($responseData['Item'])->flatten()->toArray()];
-    }
+    // if (is_array($responseData['Item']) && count($responseData['Item'])) {
+    //     $responseData['Item'] = ['SKU' => collect($responseData['Item'])->flatten()->toArray()];
+    // }
+    $request->normaliseItems();
 
     // ** THIS IS WHAT WE GET FROM NETO
     // Multiple errors:
@@ -237,29 +241,52 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
     //     ]
     // ]
 
-    // We can flatten and extract the Item to produce a keyed array in all cases (except when there are no Warnings)
-    if (is_array($responseData['Messages']['Warning'] ?? null) && count($responseData['Messages']['Warning'])) {
-        $responseData['Messages']['Warning'] = collect($responseData['Messages']['Warning'])
-            ->flatten()
-            ->filter(fn($v, $k) => $v !== 'Warning')
-            ->values()
-            ->mapWithKeys(fn($v, $k) => [Str::afterLast($v, 'Item ') => Str::beforeLast($v, ' Item ')])
-            ->toArray();
-    }
+    // We can mess with this a little and hopefully not lose any important data:
+    // if (is_array($responseData['Messages']['Warning'] ?? null) && count($responseData['Messages']['Warning'])) {
+    //     $responseData['Messages']['Warning'] = collect($responseData['Messages']['Warning'])
+    //         ->flatten()
+    //         ->filter(fn($v, $k) => $v !== 'Warning')
+    //         ->values()
+    //         ->map(fn($v, $k) => ['SKU' => Str::afterLast($v, 'Item '), 'Message' => $v])
+    //         ->toArray();
+    // }
+    $request->normaliseWarnings();
 
     $exampleResult = [
-        'Item' => '',
-        'CurrentTime' => '2024-09-02 08:17:20',
+        'Item' => [
+            'SKU' => [
+                '0001SHIF-A-00000TEST',
+                '0001SHIF-A-00000TEST'
+            ]
+        ],
+        'CurrentTime' => '2024-09-02 09:02:13',
         'Ack' => 'Warning',
         'Messages' => [
             'Warning' => [
-                '0001SHIF-A-00000TESTxx' => 'Cannot find',
-                '0001SHIF-A-00000TESTx' => 'Cannot find'
+                [
+                    'SKU' => '0001SHIF-A-00000TEST-X',
+                    'Message' => 'Cannot find Item 0001SHIF-A-00000TEST-X'
+                ],
+                [
+                    'SKU' => '0001SHIF-A-00000TEST-XX',
+                    'Message' => 'Cannot find Item 0001SHIF-A-00000TEST-XX'
+                ]
             ]
         ]
     ];
 
-    echo VarExporter::export($responseData) . "\n";
+
+
+    // Bulk processing of succeeded and failed SKUs:
+    // $goodSkus = data_get($responseData, 'Item.SKU') ?? [];
+    // $badSkus = data_get($responseData, 'Messages.Warning.*.SKU') ?? [];
+
+    $goodSkus = $request->skusProcessed();
+    $badSkus = $request->skusFailed();
+
+    s($responseData);
+    s($goodSkus);
+    s($badSkus);
     return $request;
 }
 
@@ -275,8 +302,9 @@ function getItemBySku(mixed $sku): NetoGetItem {
     // ** GetItem by SKU
     // ********************
     $request = NetoGetItem::make(['SKU' => $sku])
-        ->withOutputSelectors(['Name', 'Brand', 'Model', 'WarehouseQuantity']);
-    $request->post();
+        ->withOutputSelectors(['Name', 'Brand', 'Model', 'WarehouseQuantity'])
+        ->post();
+
     $itemData = $request->responseData();
     printf("GetItem Error: %s\n", $itemData['Messages']['Error'] ?? 'None');
     printf("GetItem Warning: %s\n", $itemData['Messages']['Warning'] ?? 'None');
@@ -296,7 +324,7 @@ function testUpdateOrder($sku = 'amp74830-01A', string $orderId = 'SFX0004973'):
     // ********************
     $request = new NetoUpdateOrder;
     $request
-        ->withData([
+        ->withOrder([
                 "OrderID" => $orderId,
                 "StickyNoteTitle" => "Test Title 2",
                 "StickyNote" => "Test Note 2",
@@ -327,16 +355,10 @@ function testUpdateOrder($sku = 'amp74830-01A', string $orderId = 'SFX0004973'):
 
     $response = $request->responseData();
 
-    // var_export($request->responseData());
-    // dump($request->responseData());
-    // echo VarExporter::export($request->responseData()) . "\n";
-    // s($request->responseData());
     if ($response['Ack'] == 'Error' && $response['Messages']['Error']['Message'] == 'JSON Error') {
-        // VarExporter::export($request->postData);
         ssd($request->postData);
     }
 
-    // var_export($request->responseData());
     echo VarExporter::export($response) . "\n";
     return $request;
 }
@@ -365,14 +387,15 @@ function testGetOrder(mixed $orderId = 'SFX0004973'): NetoGetOrder {
 function debugGetOrder(mixed $orderId = 'SFX0004973') {
     sd(NetoGetOrder::make(['OrderID' => $orderId])
         ->withOutputSelectors(NetoGetOrder::$availableOutputSelectors)
-        ->post());
+        ->post()
+        ->responseData()
+    );
 }
 
 function debugGetItem(mixed $sku = '0001SHIF-A') {
     echo VarExporter::export('') . "\n";
     $request = NetoGetItem::make(['SKU' => $sku])
         ->withOutputSelectors(NetoGetItem::$availableOutputSelectors);
-    $res2 = $request->post();
     $response = $request->responseData();
 }
 
@@ -387,6 +410,8 @@ $helloKittySku = $sku . "-00000TEST";
 
 /** @noinspection PhpUnhandledExceptionInspection */
 $request = updateHelloKittyItem($helloKittySku);
+/** @noinspection PhpUnhandledExceptionInspection */
+$request = updateHelloKittyItem($helloKittySku . "x");
 die();
 /** @noinspection PhpUnhandledExceptionInspection */
 // $request = getItemBySku($helloKittySku);

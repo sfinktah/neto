@@ -5,7 +5,7 @@ namespace Sfinktah\Neto;
 /**
  * https://developers.maropost.com/documentation/engineers/api-documentation/products/additem/
  */
-class NetoAddItem extends NetoItem
+class NetoAddItem extends NetoUpdateItem
 {
     public static string $netoAction = 'AddItem';
 

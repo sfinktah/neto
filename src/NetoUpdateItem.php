@@ -316,16 +316,6 @@ class NetoUpdateItem extends NetoItem
 
 
     /**
-     * @param array|null $data Items
-     * @return array = $this->responseData()
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Sfinktah\Neto\InvalidOutputSelector
-     */
-    public function post(array|null $data = null): array {
-        return parent::post($data);
-    }
-
-    /**
      * @return array = [
      *       'Item' => [
      *           'SKU' => '0001SHIF-A-00000TEST',

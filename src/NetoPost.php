@@ -22,7 +22,7 @@ class NetoPost
      * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws \Sfinktah\Neto\InvalidOutputSelector
      */
-    public function post(array|null $data = null): array {
+    public function post(array|null $data = null): static {
         $httpClient = new Client();
 
         if (is_array($data)) {
@@ -61,7 +61,9 @@ class NetoPost
             'connect_timeout' => 650
         ]);
 
-        return $this->responseData = json_decode($response->getBody()->getContents(), true);
+        $this->responseData = json_decode($response->getBody()->getContents(), true);
+
+        return $this;
     }
 
     /**
@@ -87,10 +89,10 @@ class NetoPost
 
     /**
      * @param array $data = static::$availableDataItems
+     * @deprecated Use withFilter, withItem, withOrder, etc.
      */
     public function withData(array $data): static {
-        $this->data = array_merge($this->data, $data);
-        return $this;
+        return $this->withFilter($data);
     }
 
     /**
@@ -98,7 +100,8 @@ class NetoPost
      * @param array $filter = static::$availableDataItems
      */
     public function withFilter(array $filter): static {
-        return $this->withData($filter);
+        $this->data = array_merge($this->data, $filter);
+        return $this;
     }
 
     /**
@@ -145,6 +148,7 @@ class NetoPost
 
 
 /*
+ * How to extract Enumeration values from Neto documentation with JavaScript:
 var array = $('a:contains(Enumeration)').map(function() {
     var $this = $(this);
     var $parent = $this.parent();
