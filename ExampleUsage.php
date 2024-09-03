@@ -8,6 +8,7 @@ use Sfinktah\Neto\NetoAddItem;
 use Sfinktah\Neto\NetoDateTime;
 use Sfinktah\Neto\NetoGetItem;
 use Sfinktah\Neto\NetoGetOrder;
+use Sfinktah\Neto\NetoPost;
 use Sfinktah\Neto\NetoUpdateItem;
 use Sfinktah\Neto\NetoUpdateOrder;
 
@@ -100,9 +101,6 @@ function getOrderDetailsByDateRange($dateFrom, $dateTo)
 
     return $request->post()->responseData();
 }
-function test($sku = '0001SHIF-A', $orderId = 'SFX0004973') {
-
-}
 
 /**
  * @param mixed $sku
@@ -166,82 +164,8 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
     $responseData = $request->responseData();
 
 
-    // ** THIS IS WHAT WE GET FROM NETO
-    // Single update:
-    // [
-    //     'Item' => [
-    //         '0001SHIF-A-00000TEST'
-    //     ],
-    //     'CurrentTime' => '2024-09-01 13:45:20',
-    //     'Ack' => 'Success'
-    // ]
-
-    // ** THIS IS WHAT WE GET FROM NETO
-    // Multiple updates:
-    // [
-    //     'Item' => [
-    //         [
-    //             'SKU' => '0001SHIF-A-00000TEST'
-    //         ],
-    //         [
-    //             'SKU' => '0001SHIF-A-00000TEST'
-    //         ]
-    //     ],
-    //     'CurrentTime' => '2024-09-01 13:43:58',
-    //     'Ack' => 'Success'
-    // ]
-
-
-    // To normalise this somewhat, we could produce an output such as follows, using an array of SKUs even when
-    // only 1 SKU is present. Though if no SKUs are present, the result would be undefined:
-    // [
-    //     'Item' => [
-    //         'SKU' => [
-    //             '0001SHIF-A-00000TEST',
-    //             '0001SHIF-A-00000TEST'
-    //         ]
-    //     ],
-    //     'CurrentTime' => '2024-09-01 13:51:42',
-    //     'Ack' => 'Success'
-    // ]
-    //
-    // We may elect not to modify the response, and have an additional method ::updatedSkus() or smth, but let's
-    // just manually perform it here for this example until we decide.
-    // if (is_array($responseData['Item']) && count($responseData['Item'])) {
-    //     $responseData['Item'] = ['SKU' => collect($responseData['Item'])->flatten()->toArray()];
-    // }
     $request->normaliseItems();
 
-    // ** THIS IS WHAT WE GET FROM NETO
-    // Multiple errors:
-    //     'Ack' => 'Warning',
-    //     'Messages' => [
-    //         'Warning' => [
-    //             [
-    //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TESTx',
-    //                 'SeverityCode' => 'Warning'
-    //             ],
-    //             [
-    //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TESTx',
-    //                 'SeverityCode' => 'Warning'
-    //             ]
-    //         ]
-    //     ]
-
-    // ** THIS IS WHAT WE GET FROM NETO
-    // Single error:
-    // [
-    //     'CurrentTime' => '2024-09-02 07:30:10',
-    //     'Ack' => 'Warning',
-    //     'Messages' => [
-    //         'Warning' => [
-    //             'Message' => 'Cannot find Item 0001SHIF-A-00000TESTx',
-    //             'SeverityCode' => 'Warning'
-    //         ]
-    //     ]
-    // ]
-
-    // We can mess with this a little and hopefully not lose any important data:
     // if (is_array($responseData['Messages']['Warning'] ?? null) && count($responseData['Messages']['Warning'])) {
     //     $responseData['Messages']['Warning'] = collect($responseData['Messages']['Warning'])
     //         ->flatten()
@@ -250,8 +174,9 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
     //         ->map(fn($v, $k) => ['SKU' => Str::afterLast($v, 'Item '), 'Message' => $v])
     //         ->toArray();
     // }
-    $request->normaliseWarnings();
+    NetoPost::normaliseWarnings($request);
 
+    /** @noinspection PhpUnusedLocalVariableInspection */
     $exampleResult = [
         'Item' => [
             'SKU' => [
@@ -322,7 +247,7 @@ function testUpdateOrder($sku = 'amp74830-01A', string $orderId = 'SFX0004973'):
     // ********************
     // ** UpdateOrder
     // ********************
-    $request = new NetoUpdateOrder;
+    $request = new NetoUpdateOrder();
     $request
         ->withOrder([
                 "OrderID" => $orderId,
@@ -354,10 +279,6 @@ function testUpdateOrder($sku = 'amp74830-01A', string $orderId = 'SFX0004973'):
     $request->post();
 
     $response = $request->responseData();
-
-    if ($response['Ack'] == 'Error' && $response['Messages']['Error']['Message'] == 'JSON Error') {
-        ssd($request->postData);
-    }
 
     echo VarExporter::export($response) . "\n";
     return $request;

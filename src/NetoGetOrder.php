@@ -246,7 +246,18 @@ class NetoGetOrder extends NetoPost
      *                 ],
      *         ],
      *     'CurrentTime' => '2024-08-28 11:12:31',
-     *     'Ack' => 'Success',
+     *     'Ack' => ['Success', 'Warning', 'Error'][$any],
+     *     'Messages' => [
+     *         'Error' => [
+     *             'Message' => 'JSON Error',
+     *             'SeverityCode' => 'Error',
+     *             'Description' => 'String'
+     *         ],
+     *         'Warning' => [
+     *             'Message' => 'Warning Message',
+     *             'SeverityCode' => 'Warning'
+     *         ]
+     *     ]
      * ]
      */
     public static function returnDataExample(): array {

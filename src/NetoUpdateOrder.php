@@ -105,12 +105,17 @@ class NetoUpdateOrder extends NetoOrder // Post
      *         'OrderID' => 'SFX0004973',
      *     ],
      *     'CurrentTime' => '2024-08-30 10:22:21',
-     *     'Ack' => ['Success', 'Error'][$any]
+     *     'Ack' => ['Success', 'Warning', 'Error'][$any],
      *     'Messages' => [
      *         'Error' => [
      *             'Message' => 'JSON Error',
      *             'SeverityCode' => 'Error',
      *             'Description' => 'String'
+     *         ],
+     *         'Warning' => [
+     *             'Message' => 'Warning Message',
+     *             'SeverityCode' => 'Warning'
+     *         ]
      *     ]
      * ]
      */

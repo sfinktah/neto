@@ -4,6 +4,7 @@ namespace Sfinktah\Neto;
 
 use Exception;
 use GuzzleHttp\Client;
+use Illuminate\Support\Str;
 
 
 class NetoPost
@@ -16,7 +17,81 @@ class NetoPost
     public array $outputSelectors = [];
     public array $data = [];
     protected array $responseData = [];
-    public string|false|null $postData = null;
+    public string|false|null $jsonEncodedPostData = null;
+    protected bool $warningsNormalised = false;
+    /**
+     * @var array[]
+     */
+    protected array $postData = [];
+    protected bool $hasPerformedPost = false;
+
+    // ** THIS IS WHAT WE GET FROM NETO
+    // Multiple errors:
+    //     'Ack' => 'Warning',
+    //     'Messages' => [
+    //         'Warning' => [
+    //             [
+    //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TESTx',
+    //                 'SeverityCode' => 'Warning'
+    //             ],
+    //             [
+    //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TESTx',
+    //                 'SeverityCode' => 'Warning'
+    //             ]
+    //         ]
+    //     ]
+
+    // ** THIS IS WHAT WE GET FROM NETO
+    // Single error:
+    // [
+    //     'CurrentTime' => '2024-09-02 07:30:10',
+    //     'Ack' => 'Warning',
+    //     'Messages' => [
+    //         'Warning' => [
+    //             'Message' => 'Cannot find Item 0001SHIF-A-00000TESTx',
+    //             'SeverityCode' => 'Warning'
+    //         ]
+    //     ]
+    // ]
+
+    // We can mess with this a little and hopefully not lose any important data:
+    public static function normaliseWarnings(NetoItem $instance): static {
+        // Result after calling:
+        // [   ...,
+        //     'Ack' => 'Warning',
+        //     'Messages' => [
+        //         'Warning' => [
+        //             [
+        //                 'SKU' => '0001SHIF-A-00000TEST-X',
+        //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TEST-X'
+        //             ],
+        //             [
+        //                 'SKU' => '0001SHIF-A-00000TEST-XX',
+        //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TEST-XX'
+        //             ]
+        //         ]
+        //     ]
+        // ];
+        if (!$instance->warningsNormalised) {
+            if (is_array($instance->responseData()['Messages']['Warning'] ?? null) && count($instance->responseData()['Messages']['Warning'])) {
+                // NOTE: this will only operate correctly for warnings that contain " Item <SKU>$", but it is unknown
+                // what other warning messages may be encountered.
+                $instance->responseData['Messages']['Warning'] = collect($instance->responseData()['Messages']['Warning'])
+                    ->flatten()
+                    ->filter(fn($v, $k) => $v !== 'Warning')
+                    ->values()
+                    ->map(function ($v, $k) {
+                        if (!Str::contains($v, 'Item ')) {
+                            trigger_error("Neto returned a warning that didn't contain an Item reference: $v", E_USER_WARNING);
+                        }
+                        return ['SKU' => Str::afterLast($v, 'Item '), 'Message' => $v];
+                    })
+                    ->toArray();
+            }
+            $instance->warningsNormalised = true;
+        }
+        return $instance;
+    }
 
     /**
      * @throws \GuzzleHttp\Exception\GuzzleException
@@ -33,7 +108,7 @@ class NetoPost
 
         // Define request data
         //     -- https://developers.maropost.com/documentation/engineers/api-documentation/products/getitem
-        $postData = [
+        $this->postData = $postData = [
             static::$postKey => $data,
         ];
 
@@ -46,7 +121,7 @@ class NetoPost
         }
 
         // printf("postData: %s\n", print_r(json_encode($postData, JSON_PRETTY_PRINT), true));
-        $this->postData = json_encode($postData, JSON_PRETTY_PRINT);
+        $this->jsonEncodedPostData = json_encode($postData, JSON_PRETTY_PRINT);
 
         $headers = [
             'NETOAPI_ACTION' => static::$netoAction,
@@ -61,7 +136,12 @@ class NetoPost
             'connect_timeout' => 650
         ]);
 
-        $this->responseData = json_decode($response->getBody()->getContents(), true);
+        $this->responseData = $responseData = json_decode($response->getBody()->getContents(), true);
+
+        if ($responseData['Ack'] == 'Error' && $responseData['Messages']['Error']['Message'] == 'JSON Error') {
+            trigger_error('Neto reported JSON Error, JSON dump follows', E_USER_WARNING);
+            \Sage::dump($this->jsonEncodedPostData);
+        }
 
         return $this;
     }
@@ -92,6 +172,7 @@ class NetoPost
      * @deprecated Use withFilter, withItem, withOrder, etc.
      */
     public function withData(array $data): static {
+        trigger_error('Neto*::withData is deprecated in favour of withItem, withOrder, etc', E_USER_WARNING);
         return $this->withFilter($data);
     }
 
@@ -109,7 +190,7 @@ class NetoPost
      */
     public function __construct(array|null $data = null) {
         if (is_array($data)) {
-            $this->withData($data);
+            $this->withFilter($data);
         }
     }
 
@@ -121,6 +202,9 @@ class NetoPost
     }
 
     public function responseData() : array {
+        if (!$this->hasPerformedPost) {
+            $this->post();
+        }
         return $this->responseData;
     }
 
@@ -143,6 +227,10 @@ class NetoPost
         }
 
         return $key !== null ? ($config[$key] ?? $default) : $config;
+    }
+
+    public function getPostData(): array {
+        return $this->postData;
     }
 }
 

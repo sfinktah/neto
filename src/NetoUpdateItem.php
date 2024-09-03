@@ -338,17 +338,14 @@ class NetoUpdateItem extends NetoItem
      *           'Warning' => [
      *               'Message' => 'Cannot find Item 0001SHIF-A-00000TEST',
      *               'SeverityCode' => 'Warning',
-     *               'Description' => 'Optional'
      *               // will be an array of results if multiple warnings occur:
      *               [
      *                    'Message' => 'Cannot find Item 0001SHIF-A-00000TEST',
      *                    'SeverityCode' => 'Warning',
-     *                    'Description' => 'Optional'
      *                ],
      *                [
      *                    'Message' => 'Cannot find Item 0001SHIF-A-00000TEST',
      *                    'SeverityCode' => 'Warning',
-     *                    'Description' => 'Optional'
      *                ]
      *           ]
      *       ]

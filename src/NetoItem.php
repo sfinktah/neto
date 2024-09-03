@@ -2,6 +2,7 @@
 
 namespace Sfinktah\Neto;
 
+use http\Exception\InvalidArgumentException;
 use Illuminate\Support\Str;
 
 /**
@@ -11,13 +12,15 @@ class NetoItem extends NetoPost
 {
     public static string $postKey = 'Item';
     protected bool $itemsNormalised = false;
-    protected bool $warningsNormalised = false;
 
 
     /**
      * @param array $item = static::$availableDataItems
      */
     public function withItem(array $item): static {
+        if (!is_array($item[0] ?? null) || !count($item[0])) {
+            throw new \InvalidArgumentException("withItem requires an array of 1 or more items");
+        }
         $this->data = array_merge($this->data, $item);
         return $this;
     }
@@ -32,11 +35,49 @@ class NetoItem extends NetoPost
 
     public function skusFailed() : array {
         if (!$this->warningsNormalised) {
-            $this->normaliseWarnings();
+            NetoPost::normaliseWarnings($this);
         }
         return data_get($this->responseData(), 'Messages.Warning.*.SKU') ?? [];
     }
 
+    // ** THIS IS WHAT WE GET FROM NETO
+    // Single update:
+    // [
+    //     'Item' => [
+    //         '0001SHIF-A-00000TEST'
+    //     ],
+    //     'CurrentTime' => '2024-09-01 13:45:20',
+    //     'Ack' => 'Success'
+    // ]
+
+    // ** THIS IS WHAT WE GET FROM NETO
+    // Multiple updates:
+    // [
+    //     'Item' => [
+    //         [
+    //             'SKU' => '0001SHIF-A-00000TEST'
+    //         ],
+    //         [
+    //             'SKU' => '0001SHIF-A-00000TEST'
+    //         ]
+    //     ],
+    //     'CurrentTime' => '2024-09-01 13:43:58',
+    //     'Ack' => 'Success'
+    // ]
+
+
+    // To normalise this somewhat, we could produce an output such as follows, using an array of SKUs even when
+    // only 1 SKU is present. Though if no SKUs are present, the result would be undefined:
+    // [
+    //     'Item' => [
+    //         'SKU' => [
+    //             '0001SHIF-A-00000TEST',
+    //             '0001SHIF-A-00000TEST'
+    //         ]
+    //     ],
+    //     'CurrentTime' => '2024-09-01 13:51:42',
+    //     'Ack' => 'Success'
+    // ]
     public function normaliseItems(): static {
         // [
         //     'Item' => [
@@ -55,32 +96,4 @@ class NetoItem extends NetoPost
         return $this;
     }
 
-    public function normaliseWarnings(): static {
-        //     'Ack' => 'Warning',
-        //     'Messages' => [
-        //         'Warning' => [
-        //             [
-        //                 'SKU' => '0001SHIF-A-00000TEST-X',
-        //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TEST-X'
-        //             ],
-        //             [
-        //                 'SKU' => '0001SHIF-A-00000TEST-XX',
-        //                 'Message' => 'Cannot find Item 0001SHIF-A-00000TEST-XX'
-        //             ]
-        //         ]
-        //     ]
-        // ];
-        if (!$this->warningsNormalised) {
-            if (is_array($this->responseData()['Messages']['Warning'] ?? null) && count($this->responseData()['Messages']['Warning'])) {
-                $this->responseData['Messages']['Warning'] = collect($this->responseData()['Messages']['Warning'])
-                    ->flatten()
-                    ->filter(fn($v, $k) => $v !== 'Warning')
-                    ->values()
-                    ->map(fn($v, $k) => ['SKU' => Str::afterLast($v, 'Item '), 'Message' => $v])
-                    ->toArray();
-            }
-            $this->warningsNormalised = true;
-        }
-        return $this;
-    }
 }
