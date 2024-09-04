@@ -318,6 +318,7 @@ function debugGetItem(mixed $sku = '0001SHIF-A') {
 $sku = '0001SHIF-A';
 $orderId = 'SFX0004973';
 $helloKittySku = $sku . "-00000TEST";
+$categoryName = "LED Light Bars";
 
 function getCategories() {
     $responseData = NetoGetContent::make()
@@ -330,7 +331,13 @@ function getCategories() {
         ->toArray();
 }
 
-sd(getCategories());
+// Get all categories
+s($categories = getCategories());
+
+// Get specific category ID
+$key = collect($categories)->search($categoryName);
+s($key);
+die();
 
 // debugGetItem();
 
