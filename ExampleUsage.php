@@ -3,13 +3,11 @@
 /** @noinspection DuplicatedCode */
 
 use Brick\VarExporter\VarExporter;
-use Illuminate\Support\Str;
+use Sfinktah\MarkleCache\MarkleCache;
 use Sfinktah\Neto\NetoAddItem;
-use Sfinktah\Neto\NetoDateTime;
 use Sfinktah\Neto\NetoGetContent;
 use Sfinktah\Neto\NetoGetItem;
 use Sfinktah\Neto\NetoGetOrder;
-use Sfinktah\Neto\NetoPost;
 use Sfinktah\Neto\NetoUpdateItem;
 use Sfinktah\Neto\NetoUpdateOrder;
 
@@ -318,8 +316,9 @@ function debugGetItem(mixed $sku = '0001SHIF-A') {
 $sku = '0001SHIF-A';
 $orderId = 'SFX0004973';
 $helloKittySku = $sku . "-00000TEST";
+$categoryName = "LED Light Bars";
 
-function getCategories() {
+function getCategories(): array {
     $responseData = NetoGetContent::make()
         ->withOutputSelectors(['ContentName'])
         ->withFilter(['ContentType' => 'Category'])
@@ -330,7 +329,26 @@ function getCategories() {
         ->toArray();
 }
 
-sd(getCategories());
+// Get all categories
+function getCategoriesCached() {
+    return MarkleCache::remember('netoCategories', 3600, fn() => getCategories());
+}
+
+/**
+ * @param string $categoryName
+ * @return false|mixed
+ */
+function getSpecificCategoryID(string $categoryName): string|false {
+    // Get specific category ID
+    return collect(getCategoriesCached())->search($categoryName);
+}
+
+s($categories = getCategoriesCached());
+
+$categoryId = getSpecificCategoryID($categoryName);
+
+s($categoryId);
+die();
 
 // debugGetItem();
 
