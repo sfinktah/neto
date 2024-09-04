@@ -6,6 +6,7 @@ use Brick\VarExporter\VarExporter;
 use Illuminate\Support\Str;
 use Sfinktah\Neto\NetoAddItem;
 use Sfinktah\Neto\NetoDateTime;
+use Sfinktah\Neto\NetoGetContent;
 use Sfinktah\Neto\NetoGetItem;
 use Sfinktah\Neto\NetoGetOrder;
 use Sfinktah\Neto\NetoPost;
@@ -13,7 +14,7 @@ use Sfinktah\Neto\NetoUpdateItem;
 use Sfinktah\Neto\NetoUpdateOrder;
 
 Sage::$displayCalledFrom = false;
-Sage::$theme = Sage::THEME_SOLARIZED_DARK;
+Sage::$cliColors = false;
 
 $directory = realpath(__DIR__);
 $bootstrapFilePath = '';
@@ -317,6 +318,19 @@ function debugGetItem(mixed $sku = '0001SHIF-A') {
 $sku = '0001SHIF-A';
 $orderId = 'SFX0004973';
 $helloKittySku = $sku . "-00000TEST";
+
+function getCategories() {
+    $responseData = NetoGetContent::make()
+        ->withOutputSelectors(['ContentName'])
+        ->withFilter(['ContentType' => 'Category'])
+        ->post()
+        ->responseData();
+    return collect($responseData['Content'])
+        ->pluck('ContentName', 'ContentID')
+        ->toArray();
+}
+
+sd(getCategories());
 
 // debugGetItem();
 
