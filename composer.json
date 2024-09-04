@@ -1,7 +1,7 @@
 {
-    "name": "sfinktah/neto",
-    "description": "Simple Neto (Maropost) API Connector",
-    "keywords": ["neto", "maropost", "laravel"],
+    "name": "sfinktah/markle-cache",
+    "description": "Simple MemCache Implementation for Mark",
+    "keywords": ["markle", "mark", "cache", "memcache", "memcached"],
     "license": "MIT",
     "authors": [
         {
@@ -10,13 +10,7 @@
         }
     ],
     "require": {
-        "php": "^8.0",
-        "brick/varexporter": "^0.5.0",
-        "php-sage/sage": "^1.7",
-        "guzzlehttp/guzzle": "^7",
-        "illuminate/support": "^8",
-        "illuminate/collections": "^8",
-        "illuminate/container": "^8.0"
+        "php": "^7.2|^8.0"
     },
     "require-dev": {
     },
@@ -24,18 +18,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Sfinktah\\Neto\\": "src/"
+            "Sfinktah\\MarkleCache\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-        }
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Sfinktah\\Neto\\NetoServiceProvider"
-            ]
         }
     },
     "config": {
