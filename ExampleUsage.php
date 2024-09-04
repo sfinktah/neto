@@ -40,8 +40,7 @@ function getOrderDetailsByDateRange($dateFrom, $dateTo)
         'DatePlacedFrom' => $dateFrom,
         'DatePlacedTo' => $dateTo,
         'OrderStatus' => [
-            'New', 'New Backorder', 'Backorder Approved', 'Pick', 'Pack', 'Pending Pickup', 'Pending
-            Dispatch', 'Dispatched', 'Cancelled', 'Uncommitted', 'On Hold'
+            'New', 'New Backorder', 'Backorder Approved', 'Pick', 'Pack', 'Pending Pickup', 'Pending Dispatch', 'Dispatched', 'Cancelled', 'Uncommitted', 'On Hold'
         ],
     ])
     ->withOutputSelectors([
@@ -152,19 +151,23 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
                     'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
                     'SKU' => $sku,
                 ],
-                [
-                    'Name' => 'A really pretty Hello Kitty for your hizzy',
-                    'RestockQty' => 8,
-                    'WarehouseQuantity' => ['WarehouseID' => 16, 'Quantity' => 1, 'Action' => 'decrement'],
-                    'SKU' => 'TEST_INVALID_SKU',
-                ],
             ]);
 
     $request->post();
+    ss($request->getPostData());
     $responseData = $request->responseData();
 
 
     $request->normaliseItems();
+
+    // if (is_array($responseData['Messages']['Warning'] ?? null) && count($responseData['Messages']['Warning'])) {
+    //     $responseData['Messages']['Warning'] = collect($responseData['Messages']['Warning'])
+    //         ->flatten()
+    //         ->filter(fn($v, $k) => $v !== 'Warning')
+    //         ->values()
+    //         ->map(fn($v, $k) => ['SKU' => Str::afterLast($v, 'Item '), 'Message' => $v])
+    //         ->toArray();
+    // }
     $request->normaliseWarnings();
 
     /** @noinspection PhpUnusedLocalVariableInspection */
@@ -190,6 +193,12 @@ function updateHelloKittyItem(mixed $sku): NetoUpdateItem {
             ]
         ]
     ];
+
+
+
+    // Bulk processing of succeeded and failed SKUs:
+    // $goodSkus = data_get($responseData, 'Item.SKU') ?? [];
+    // $badSkus = data_get($responseData, 'Messages.Warning.*.SKU') ?? [];
 
     $goodSkus = $request->skusProcessed();
     $badSkus = $request->skusFailed();
@@ -317,12 +326,13 @@ $helloKittySku = $sku . "-00000TEST";
 /** @noinspection PhpUnhandledExceptionInspection */
 $request = updateHelloKittyItem($helloKittySku);
 /** @noinspection PhpUnhandledExceptionInspection */
-$request = updateHelloKittyItem($helloKittySku . "x");
-die();
+// $request = updateHelloKittyItem($helloKittySku . "x");
+// die();
 /** @noinspection PhpUnhandledExceptionInspection */
-// $request = getItemBySku($helloKittySku);
+$request = getItemBySku($helloKittySku);
 
-// sd($request->responseData());
+sd($request->responseData());
+die();
 
 // change order status to 'Dispatched'
 /** @noinspection PhpUnhandledExceptionInspection */

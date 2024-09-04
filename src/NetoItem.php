@@ -21,7 +21,7 @@ class NetoItem extends NetoPost
         if (!is_array($item[0] ?? null) || !count($item[0])) {
             throw new \InvalidArgumentException("withItem requires an array of 1 or more items");
         }
-        $this->data = array_merge($this->data, $item);
+        $this->data = array_merge_recursive($this->data, $item);
         return $this;
     }
 
