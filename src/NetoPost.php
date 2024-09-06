@@ -11,7 +11,7 @@ class NetoPost
 {
     public static string $netoAction = '';
     public static array $availableOutputSelectors = [];
-    public static array $availableDataItems = [];
+    public static array $availableDataItems = ['__Base__' => '__IgnoreMe__'];
     public static string $postKey = 'Filter';
 
     public array $outputSelectors = [];
@@ -177,7 +177,6 @@ class NetoPost
     }
 
     /**
-     * Alias for ::withData
      * @param array $filter = static::$availableDataItems
      */
     public function withFilter(array $filter): static {

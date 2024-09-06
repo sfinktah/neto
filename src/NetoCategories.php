@@ -7,15 +7,33 @@ use Sfinktah\MarkleCache\MarkleCache;
 class NetoCategories
 {
 
+    static protected array $categories;
+
     protected static function getCategories(): array {
         $responseData = NetoGetContent::make()
-            ->withOutputSelectors(['ContentName'])
             ->withFilter(['ContentType' => 'Category'])
+            ->withOutputSelectors(['ContentName', 'ContentID', 'ContentType', 'ParentContentID'])
             ->post()
             ->responseData();
+        self::$categories = $responseData;
+        sd($responseData);
         return collect($responseData['Content'])
             ->pluck('ContentName', 'ContentID')
             ->toArray();
+    }
+
+    public static function getCategory(int $category) {
+        /**
+         * @var NetoGetContent $responseData
+         */
+        $responseData = NetoGetContent::make();
+        $responseData
+            ->withFilter(['ContentType' => 'Category', 'ContentID' => $category])
+            ->withOutputSelectors(['ContentName', 'ContentID', 'ContentType', 'ParentContentID'])
+            ->post()
+            ->responseData();
+        return $responseData;
+
     }
 
     public static function getCategoriesCached() {
@@ -41,4 +59,21 @@ class NetoCategories
         // Search for the category name by ID
         return collect($categories)->first(fn($v, $k) => $k == $categoryId, false);
     }
+
+    /**
+     * @param int|string|self $category Category Name, ID or object
+     */
+    public function __construct(int|string|self $category) {
+        if (is_int($category) || preg_match('/^[0-9]+$/', $category)) {
+            $this->category = self::getCategory(intval($category));
+        }
+    }
+
+    /**
+     * @param array|null $data = static::$availableDataItems
+     */
+    public static function make(array|null $data = null): static {
+        return new static($data);
+    }
+
 }
