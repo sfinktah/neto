@@ -5,6 +5,7 @@
 use Brick\VarExporter\VarExporter;
 use Sfinktah\MarkleCache\MarkleCache;
 use Sfinktah\Neto\NetoAddItem;
+use Sfinktah\Neto\NetoCategories;
 use Sfinktah\Neto\NetoGetContent;
 use Sfinktah\Neto\NetoGetItem;
 use Sfinktah\Neto\NetoGetOrder;
@@ -318,36 +319,12 @@ $orderId = 'SFX0004973';
 $helloKittySku = $sku . "-00000TEST";
 $categoryName = "LED Light Bars";
 
-function getCategories(): array {
-    $responseData = NetoGetContent::make()
-        ->withOutputSelectors(['ContentName'])
-        ->withFilter(['ContentType' => 'Category'])
-        ->post()
-        ->responseData();
-    return collect($responseData['Content'])
-        ->pluck('ContentName', 'ContentID')
-        ->toArray();
-}
-
-// Get all categories
-function getCategoriesCached() {
-    return MarkleCache::remember('netoCategories', 3600, fn() => getCategories());
-}
-
-/**
- * @param string $categoryName
- * @return false|mixed
- */
-function getSpecificCategoryID(string $categoryName): string|false {
-    // Get specific category ID
-    return collect(getCategoriesCached())->search($categoryName);
-}
-
-s($categories = getCategoriesCached());
-
-$categoryId = getSpecificCategoryID($categoryName);
+s($categories = NetoCategories::getCategoriesCached());
+$categoryId = NetoCategories::getCategoryID($categoryName);
+$categoryName = NetoCategories::getCategoryName($categoryId);
 
 s($categoryId);
+s($categoryName);
 die();
 
 // debugGetItem();
