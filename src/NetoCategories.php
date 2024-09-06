@@ -7,7 +7,48 @@ use Sfinktah\MarkleCache\MarkleCache;
 class NetoCategories
 {
 
+    /**
+     * @var array = [['ContentName' => 'String', 'ContentID' => 2, 'ContentType' => 1, 'ParentContentID' => 1]]
+     */
     static protected array $categories;
+
+    /**
+     * @var bool|array = ['ContentName' => 'String', 'ContentID' => 2, 'ContentType' => 1, 'ParentContentID' => 1]
+     */
+    protected mixed $categoryData;
+
+    public function categoryName(): string {
+        return $this->categoryData['ContentName'] ?? '';
+    }
+
+    public function categoryID(): int {
+        return $this->categoryData['ContentID'] ?? 0;
+    }
+
+    public function contentType(): int {
+        return $this->categoryData['ContentType'] ?? 0;
+    }
+
+    public function parentCategoryID(): int {
+        return $this->categoryData['ParentContentID'] ?? 0;
+    }
+
+    public function parent(): static {
+        return self::make($this->parentCategoryID());
+    }
+
+    /**
+     * @return static[] array of child categories
+     */
+    public function children(): array {
+        $result = [];
+        foreach (self::$categories as $c) {
+            if ($c['ParentContentID'] == $this->categoryID()) {
+                $result[] = self::make($c['ContentID']);
+            }
+        }
+        return $result;
+    }
 
     protected static function getCategories(): array {
         $responseData = NetoGetContent::make()
@@ -15,29 +56,21 @@ class NetoCategories
             ->withOutputSelectors(['ContentName', 'ContentID', 'ContentType', 'ParentContentID'])
             ->post()
             ->responseData();
-        self::$categories = $responseData;
-        sd($responseData);
-        return collect($responseData['Content'])
-            ->pluck('ContentName', 'ContentID')
+        self::$categories = collect($responseData['Content'])
+            ->map(fn($c) => collect($c)->mapWithKeys(fn($v, $k) => $k == 'ContentID' || $k == 'ContentType' || $k == 'ParentContentID' ? [$k => intval($v)] : [$k => $v] ))
             ->toArray();
+
+        return self::$categories;
     }
 
-    public static function getCategory(int $category) {
-        /**
-         * @var NetoGetContent $responseData
-         */
-        $responseData = NetoGetContent::make();
-        $responseData
-            ->withFilter(['ContentType' => 'Category', 'ContentID' => $category])
-            ->withOutputSelectors(['ContentName', 'ContentID', 'ContentType', 'ParentContentID'])
-            ->post()
-            ->responseData();
-        return $responseData;
-
+    public static function getCategory(int $categoryId, string $key = 'ContentID') {
+        $categories = self::getCategoriesCached();
+        return collect($categories)->first(fn($c) => $c[$key] == $categoryId) ?? false;
     }
 
     public static function getCategoriesCached() {
-        return MarkleCache::remember('netoCategories', 3600, fn() => self::getCategories());
+        // MarkleCache::forget('netoCategories');
+        return self::$categories = MarkleCache::remember('netoCategoryArray', 3600, fn() => self::getCategories());
     }
 
     /**
@@ -45,19 +78,21 @@ class NetoCategories
      * @return false|mixed
      */
     public static function getCategoryID(string $categoryName): string|false {
-        // Get specific category ID
-        return collect(self::getCategoriesCached())->search($categoryName);
+        // Get all categories
+        $categories = collect(self::getCategoriesCached());
+        // Search for the category name by ID
+        return collect($categories)->first(fn($c) => $c['ContentName'] == $categoryName)['ContentID'] ?? false;
     }
 
     /**
-     * @param int|string $categoryId
+     * @param int $categoryId
      * @return string|false
      */
-    public static function getCategoryName(int|string $categoryId): false|string {
+    public static function getCategoryName(int $categoryId): false|string {
         // Get all categories
-        $categories = self::getCategoriesCached();
+        $categories = collect(self::getCategoriesCached());
         // Search for the category name by ID
-        return collect($categories)->first(fn($v, $k) => $k == $categoryId, false);
+        return collect($categories)->first(fn($c) => $c['ContentID'] == $categoryId)['ContentName'] ?? false;
     }
 
     /**
@@ -65,15 +100,21 @@ class NetoCategories
      */
     public function __construct(int|string|self $category) {
         if (is_int($category) || preg_match('/^[0-9]+$/', $category)) {
-            $this->category = self::getCategory(intval($category));
+            $this->categoryData = self::getCategory(intval($category));
+        }
+        else if (is_string($category)) {
+            $this->categoryData = self::getCategory($category);
+        }
+        else if ($category instanceof self) {
+            $this->categoryData = self::getCategory($category->categoryID());
         }
     }
 
     /**
-     * @param array|null $data = static::$availableDataItems
+     * @param int|string|self $category Category Name, ID or object
      */
-    public static function make(array|null $data = null): static {
-        return new static($data);
+    public static function make(int|string|self $category): static {
+        return new static($category);
     }
 
 }

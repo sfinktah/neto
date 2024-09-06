@@ -319,12 +319,27 @@ $orderId = 'SFX0004973';
 $helloKittySku = $sku . "-00000TEST";
 $categoryName = "LED Light Bars";
 
-s($categories = NetoCategories::getCategoriesCached());
+// Simple lookups between Category ID & Name
 $categoryId = NetoCategories::getCategoryID($categoryName);
 $categoryName = NetoCategories::getCategoryName($categoryId);
-
 s($categoryId);
 s($categoryName);
+
+// Complex hierarchical traversal
+// Start with this category
+$category = NetoCategories::make($categoryId);
+s($category);
+
+// Get its parent category
+$categoryParent = $category->parent();
+s($categoryParent);
+
+// Get all it's children
+$categoryChildren = $categoryParent->children();
+foreach ($categoryChildren as $child) {
+    printf("    Child: %s\n", $child->categoryName());
+}
+
 die();
 
 // debugGetItem();
