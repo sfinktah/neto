@@ -98,6 +98,20 @@ class NetoUpdateOrder extends NetoOrder // Post
         "OrderRounding" => "Decimal"
     ];
 
+    /**
+     * @param array $order = array_merge(static::$availableDataItems, [
+     *     "OnHoldType" => ["On Hold", "Layby"][$any],
+     *     "OrderStatus" => [
+     *          "Quote", "New", "New Backorder", "Backorder Approved", "Pick", "Pack", "Pending Pickup",
+     *          "Pending Dispatch", "Dispatched", "Cancelled", "Uncommitted", "On Hold"][$any],
+     *     "PickStatus" => ["Complete", "Incomplete"][$any],
+     *     "ExportStatus" => ["Pending", "Exported"][$any],
+     *     "ExportedToWMS" => ["Pending", "Exported"][$any]
+     * ])
+     */
+    public function withOrder(array $order): static {
+        return parent::withOrder($order);
+    }
 
     /**
      * @return array = [

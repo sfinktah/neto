@@ -31,16 +31,12 @@ class NetoItem extends NetoPost
 
 
     public function skusProcessed() : array {
-        if (!$this->itemsNormalised) {
-            $this->normaliseItems();
-        }
+        $this->normaliseItems();
         return data_get($this->responseData(), 'Item.SKU') ?? [];
     }
 
     public function skusFailed() : array {
-        if (!$this->warningsNormalised) {
-            $this->normaliseWarnings();
-        }
+        $this->normaliseWarnings();
         return data_get($this->responseData(), 'Messages.Warning.*.SKU') ?? [];
     }
 

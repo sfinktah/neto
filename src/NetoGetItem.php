@@ -24,7 +24,7 @@ class NetoGetItem extends NetoPost
         "ModelNumber", "Subtitle", "AvailabilityDescription", "Images", "ImageURL", "BrochureURL", "ProductURL",
         "DateAdded", "DateAddedLocal", "DateAddedUTC", "DateCreatedLocal", "DateCreatedUTC", "DateUpdated",
         "DateUpdatedLocal", "DateUpdatedUTC", "UPC", "UPC1", "UPC2", "UPC3", "Type", "SubType",
-        "NumbersOfLabelsToPrint", "ReferenceNumber", "InternalNote*s", "BarcodeHeight", "SupplierItemCode",
+        "NumbersOfLabelsToPrint", "ReferenceNumber", "InternalNotes", "BarcodeHeight", "SupplierItemCode",
         "SplitForWarehousePicking", "DisplayTemplate", "EditableKitBundle", "RequiresPackaging", "IsAsset",
         "IsServiceItem", "WhenToRepeatOnStandingOrders", "SerialTracking", "Group", "ShippingCategory",
         "MonthlySpendRequirement", "RestrictedToUserGroup", "IsInventoried", "IsBought", "IsSold", "ExpenseAccount",
@@ -59,7 +59,8 @@ class NetoGetItem extends NetoPost
                 "SalesChannelID" => 1,
                 "IsApproved" => false
             ]]
-        ], "Visible" => [false/*, ...*/],
+        ],
+        "Visible" => [false/*, ...*/],
         "IsActive" => [false/*, ...*/],
         "IsNetoUtility" => [false/*, ...*/],
         "IsGiftVoucher" => false,
@@ -80,6 +81,16 @@ class NetoGetItem extends NetoPost
         "OrderDirection" => "Enumeration",
         "OutputSelector" => ["Enumeration"/*, ...*/]
     ];
+
+    /**
+     * @param array $filter = array_merge(static::$availableDataItems, [
+     *     "OrderBy" => ["ParentSKU", "ID", "Model", "Name", "IsActive", "DateAdded", "DateUpdated"][$any],
+     *     "OrderDirection" => ["ASC", "DESC"][$any]
+     * ])
+     */
+    public function withFilter(array $filter): static {
+        return parent::withFilter($filter);
+    }
 
     /**
      * Get response decoded as array/object

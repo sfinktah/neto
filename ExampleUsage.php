@@ -288,10 +288,12 @@ function testGetOrder(mixed $orderId = 'SFX0004973'): NetoGetOrder {
     // ********************
     // ** GetOrder by OrderID
     // ********************
-    $request = NetoGetOrder::make(['OrderID' => $orderId])
+    $request = NetoGetOrder::make()
+        ->withFilter(['OrderID' => $orderId])
         ->withOutputSelectors(['OrderStatus', 'Username', 'Email', 'ShipAddress', 'ShippingOption',
         'OrderLine', 'OrderLine.ShippingTracking', 'OrderLine.ShippingMethod', 'OrderLine.ShippingTrackingUrl',
-        'DatePlaced']); // 'StickyNotes',
+        'DatePlaced'])
+    ; // 'StickyNotes',
     $request->post();
     // var_export($request->responseData());
     echo VarExporter::export($request->responseData()) . "\n";
@@ -334,11 +336,21 @@ s($category);
 $categoryParent = $category->parent();
 s($categoryParent);
 
-// Get all it's children
-$categoryChildren = $categoryParent->children();
-foreach ($categoryChildren as $child) {
-    printf("    Child: %s\n", $child->categoryName());
+
+// Show a total heirachy of categories
+function displayCategoryTree($category, $indentation = ''): void {
+    $children = $category->children();
+    $lastChild = end($children);
+    foreach ($children as $child) {
+        $prefix = ($child === $lastChild) ? '└── ' : '├── ';
+        $continuation = ($child === $lastChild) ? '    ' : '│   ';
+        echo $indentation . $prefix . ($child->categoryName() ?? "root") . "\n";
+        displayCategoryTree($child, $indentation . $continuation);
+    }
 }
+
+// Usage
+displayCategoryTree(NetoCategories::root());
 
 die();
 

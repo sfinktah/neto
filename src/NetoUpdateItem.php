@@ -314,6 +314,18 @@ class NetoUpdateItem extends NetoItem
                 ]
         ];
 
+    /**
+     * @param array $item = array_merge(static::$availableDataItems, [[
+     *     "PickPriority" => ["FIFO", "FEFO", "LIFO"][$any],
+     *     "WhenToRepeatOnStandingOrders" => ["once", "always"][$any],
+     *     "StoreQuantity" => ["Action" => ["increment", "decrement", "set"][$any]],
+     *     "WarehouseQuantity" => ["Action" => ["increment", "decrement", "set"][$any]],
+     *     "WarehouseLocation" => ["Type" => ["Pick", "Bulk"][$any]],
+     * ]])
+     */
+    public function withItem(array $item): static {
+        return parent::withItem($item);
+    }
 
     /**
      * @return array = [

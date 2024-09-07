@@ -111,10 +111,18 @@ class NetoCategories
     }
 
     /**
+     * Get category object by Name or ID
      * @param int|string|self $category Category Name, ID or object
      */
     public static function make(int|string|self $category): static {
         return new static($category);
+    }
+
+    /**
+     * Get root category object
+     */
+    public static function root(): static {
+        return new static(1);
     }
 
 }
