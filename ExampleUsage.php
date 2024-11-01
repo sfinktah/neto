@@ -2,19 +2,6 @@
 
 /** @noinspection DuplicatedCode */
 
-use Brick\VarExporter\VarExporter;
-use Sfinktah\MarkleCache\MarkleCache;
-use Sfinktah\Neto\NetoAddItem;
-use Sfinktah\Neto\NetoCategories;
-use Sfinktah\Neto\NetoGetContent;
-use Sfinktah\Neto\NetoGetItem;
-use Sfinktah\Neto\NetoGetOrder;
-use Sfinktah\Neto\NetoUpdateItem;
-use Sfinktah\Neto\NetoUpdateOrder;
-
-Sage::$displayCalledFrom = false;
-Sage::$cliColors = false;
-
 $directory = realpath(__DIR__);
 $bootstrapFilePath = '';
 while ($directory !== DIRECTORY_SEPARATOR) {
@@ -33,6 +20,20 @@ if (!function_exists('dump')) {
         echo "Error: Unable to locate 'bootstrap.php' in the current directory or any parent directories. This may be fatal.\n";
     }
 }
+
+use Brick\VarExporter\VarExporter;
+use Sfinktah\MarkleCache\MarkleCache;
+use Sfinktah\Neto\NetoAddItem;
+use Sfinktah\Neto\NetoCategories;
+use Sfinktah\Neto\NetoGetContent;
+use Sfinktah\Neto\NetoGetItem;
+use Sfinktah\Neto\NetoGetOrder;
+use Sfinktah\Neto\NetoUpdateItem;
+use Sfinktah\Neto\NetoUpdateOrder;
+
+Sage::$displayCalledFrom = false;
+Sage::$cliColors = false;
+
 
 function getOrderDetailsByDateRange($dateFrom, $dateTo)
 {
@@ -319,6 +320,7 @@ function debugGetItem(mixed $sku = '0001SHIF-A') {
 $sku = '0001SHIF-A';
 $orderId = 'SFX0004973';
 $helloKittySku = $sku . "-00000TEST";
+
 $categoryName = "LED Light Bars";
 
 // Simple lookups between Category ID & Name

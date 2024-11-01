@@ -236,7 +236,8 @@ class NetoPost
 
 /*
  * How to extract Enumeration values from Neto documentation with JavaScript:
-var array = $('a:contains(Enumeration)').map(function() {
+ *
+array = $('a:contains(Enumeration)').map(function() {
     var $this = $(this);
     var $parent = $this.parent();
     var $lastPrev = $parent.prevAll().last();
@@ -247,9 +248,13 @@ var array = $('a:contains(Enumeration)').map(function() {
     };
 
     return {
-        enumOptions: match($parent.text(), /\((.*?)\)/),
+        enumOptions: match($parent.text(), /\((.*?)\)/).split(', '),
         enumName: $lastPrev.text(),
         enumParent: match($lastPrev.parentsUntil('table').parent().prev().text(), /<(.*?)>/)
     };
 }).get();
+array.forEach(function(v) {
+    var options = v.enumOptions.join('", "')
+    console.log(`"${v.enumParent}" => "${v.enumName}" => ["${options}"][$any],`)
+});
  */
