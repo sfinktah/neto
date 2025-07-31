@@ -2,6 +2,8 @@
 
 namespace Sfinktah\Neto;
 
+use Sfinktah\MarkleCache\MarkleCache;
+
 /**
  * https://developers.maropost.com/documentation/engineers/api-documentation/orders-invoices/getorder
  */
@@ -288,6 +290,35 @@ class NetoGetOrder extends NetoPost
 
     public function withItemSelectors(array $withItemSelectors): static {
         $this->withItemSelectors = array_unique(array_merge($this->withItemSelectors, $withItemSelectors));
+        $this->postProcessingCallbacks[] = function() {
+            $orders = $this->responseData();
+            // Add Brand and AccountingCode for each order line item
+            if (!empty($orders['Order'])) {
+                foreach ($orders['Order'] as &$order) {
+                    if (!empty($order['OrderLine'])) {
+                        foreach ($order['OrderLine'] as &$line) {
+                            if (!empty($line['SKU'])) {
+                                $line = array_merge($line, MarkleCache::remember(
+                                    'neto_item_' . $line['SKU'],
+                                    48 * 60 * 60, // 48 hours in seconds
+                                    function () use ($line) {
+                                        $itemRequest = NetoGetItem::make(['SKU' => $line['SKU']])
+                                            ->withOutputSelectors($this->withItemSelectors)
+                                            ->post();
+                                        $itemData = $itemRequest->responseData();
+                                        return [
+                                            'Brand' => $itemData['Item'][0]['Brand'] ?? null,
+                                            'AccountingCode' => $itemData['Item'][0]['AccountingCode'] ?? null
+                                        ];
+                                    }
+                                ));
+                            }
+                        }
+                    }
+                }
+                $this->responseData = $orders;
+            }
+        };
         return $this;
     }
 

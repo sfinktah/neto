@@ -55,6 +55,8 @@ class NetoPost
     // ]
 
     // We can mess with this a little and hopefully not lose any important data:
+    public array $postProcessingCallbacks = [];
+
     public function normaliseWarnings(): static {
         // Result after calling:
         // [   ...,
@@ -141,6 +143,9 @@ class NetoPost
         if ($responseData['Ack'] == 'Error' && $responseData['Messages']['Error']['Message'] == 'JSON Error') {
             trigger_error('Neto reported JSON Error, JSON dump follows', E_USER_WARNING);
             \Sage::dump($this->jsonEncodedPostData);
+        }
+        else foreach ($this->postProcessingCallbacks as $callback) {
+            $callback();
         }
 
         return $this;
