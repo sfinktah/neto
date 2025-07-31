@@ -34,73 +34,32 @@ use Sfinktah\Neto\NetoUpdateOrder;
 Sage::$displayCalledFrom = false;
 Sage::$cliColors = false;
 
-
 function getOrderDetailsByDateRange($dateFrom, $dateTo)
 {
     $request = NetoGetOrder::make([
         'DatePlacedFrom' => $dateFrom,
-        'DatePlacedTo' => $dateTo,
-        'OrderStatus' => [
-            'New', 'New Backorder', 'Backorder Approved', 'Pick', 'Pack', 'Pending Pickup', 'Pending Dispatch', 'Dispatched', 'Cancelled', 'Uncommitted', 'On Hold'
-        ],
-    ])
-    ->withOutputSelectors([
-        'OrderID',
-        'ShippingOption',
-        'DeliveryInstruction',
-        'Username',
-        'Email',
-        'ShipAddress',
-        'BillAddress',
-        'CustomerRef1',
-        'CustomerRef2',
-        'CustomerRef3',
-        'CustomerRef4',
-        'SalesChannel',
-        'GrandTotal',
-        'ShippingTotal',
-        'ShippingDiscount',
-        'OrderType',
-        'OrderStatus',
-        'OrderPayment',
-        'OrderPayment.DatePaid',
-        'OrderPayment.PaymentType',
-        'SurchargeTotal', // Fetching surcharge total
-        'CurrencyCode', // Fetching currency code, use a default if not available
-        'InternalOrderNotes', // Fetching internal notes
-         // 'StickyNotes', // Fetching sticky notes
-        'DatePlaced',
-        'DateRequired',
-        'DateInvoiced',
-        'DatePaid',
-        'DateCompletedUTC',
-        'OrderLine',
-        'OrderLine.ProductName',
-        'OrderLine.PickQuantity',
-        'OrderLine.BackorderQuantity',
-        'OrderLine.UnitPrice',
-        'OrderLine.WarehouseID',
-        'OrderLine.WarehouseName',
-        'OrderLine.WarehouseReference',
-        'OrderLine.Quantity',
-        'OrderLine.PercentDiscount',
-        'OrderLine.ProductDiscount',
-        'OrderLine.CostPrice',
-        'OrderLine.ShippingMethod',
-        'OrderLine.ShippingTracking',
-        'ShippingSignature',
-        'eBay.eBayUsername',
-        'eBay.eBayStoreName',
-        'OrderLine.eBay.eBayTransactionID',
-        'OrderLine.eBay.eBayAuctionID',
-        'OrderLine.eBay.ListingType',
-        'OrderLine.eBay.DateCreated',
-        'OrderLine.eBay.DatePaid',
-        'OrderLine.DateShipped', // Fetching the date shipped
-    ]);
+        'DatePlacedTo' => $dateTo
 
-    return $request->post()->responseData();
+    ])
+        ->withOutputSelectors([
+            'OrderID',
+            'Username',
+            'OrderLine',
+            'OrderLine.ProductName',
+        ])
+        ->withItemSelectors([
+            'Brand',
+            'AccountingCode',
+        ])
+    ;
+
+    $request->post();
+    return $request->responseData();
 }
+
+print_r(getOrderDetailsByDateRange('2025-07-01', '2025-07-02'));
+die();
+
 
 /**
  * @param mixed $sku
