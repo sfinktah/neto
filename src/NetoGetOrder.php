@@ -7,6 +7,7 @@ namespace Sfinktah\Neto;
  */
 class NetoGetOrder extends NetoPost
 {
+    public array $withItemSelectors = [];
     public static string $netoAction = 'GetOrder';
     public static array $availableOutputSelectors = [
         "ID", "ShippingOption", "DeliveryInstruction", "RelatedOrderID", "Username", "Email", "ShipAddress",
@@ -78,7 +79,7 @@ class NetoGetOrder extends NetoPost
      *     'New', 'New Backorder', 'Backorder Approved', 'Pick', 'Pack', 'Pending Pickup', 'Pending Dispatch', 'Dispatched', 'Cancelled', 'Uncommitted', 'On Hold'
      * ][$any]
      */
-    public static function orderStatusEnumeration() {}
+    public static function orderStatusEnumeration() { return []; }
 
     /**
      * @param array $filter = array_merge(static::$availableDataItems, [
@@ -283,6 +284,11 @@ class NetoGetOrder extends NetoPost
      */
     public static function returnDataExample(): array {
         return [];
+    }
+
+    public function withItemSelectors(array $withItemSelectors): static {
+        $this->withItemSelectors = array_unique(array_merge($this->withItemSelectors, $withItemSelectors));
+        return $this;
     }
 
     /**
